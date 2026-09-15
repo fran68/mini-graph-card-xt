@@ -11,6 +11,11 @@
 >
 > ## History
 >
+> ### xt-0.5.x (2026-08-05)
+>
+> * Add [adaptive ambient style](#adaptive-ambient-style) for bars
+> * Render graphs in the [order](#render-order-of-graphs) the entities are listed in YAML config
+>
 > ### xt-0.4.x (2026-08-04)
 >
 > * Combine [lines and bars](#lines-and-bars) in the same cart
@@ -18,20 +23,20 @@
 >     - Bars with negative values
 >     - Lines with fill to the baseline
 > * Stack groups for multiple entities in [stacked overlaid bars](#stacked-overlaid-bars). Thanks to @ildar170975 for the idea.
-> * [Multiple stack groups](#stacked-overlaid-bars) for bars within one timeslot as extension
-> * Add per-entity bar spacing (see `bar_spacing` in [entity section](#entity-object]))
-> * Lines with [Cubic Bézier curve](#cubic-bezier-curve)
+> * [Multiple stack groups](#multiple-stacked-bar-groups) for bars within one timeslot as extension
+> * Add per-entity bar spacing (see `bar_spacing` in [entity section](#entities-object))
+> * Lines with [Cubic Bézier curve](#cubic-bézier-curve)
 >
 > ### xt-0.3.x (2026-05-10)
 >
 > * Add line_width per entity
 > * Add [static value line](#lines-with-static-value) for graphs
-> * Add spacing between bar groups/multiple entities (see `bar_spacing_group` in [card section](#card-options]))
+> * Add spacing between bar groups/multiple entities (see `bar_spacing_group` in [card section](#card-options))
 > * Fix gradients for color threshold, fix state last for bar graphs and fix first entity when show_graph set to false
 >
 > ### xt-0.2.x (2026-03-16)
 >
-> * Add timescale/labels and gridlines for the [X-axis](#labels-ticks-and-grid-lines-for-x-axis) ([docs](../blob/docs/README_x_axis.md)).
+> * Add timescale/labels and gridlines for the [X-axis](#labels-ticks-and-grid-lines-for-x-axis) ([docs](../docs/README_x_axis.md)).
 >
 >
 > ## Installation via HACS (Custom Repository)
@@ -236,7 +241,7 @@ All properties are optional.
 | icon | `true` | `true` / `false` | Display icon.
 | state | `true` | `true` / `false` / `last` | Display current state. `last` will show the last graph point's value.
 | graph | `line` | `line` / `bar` / `false` | Display option for the graph. If set to `bar` a maximum of `96` bars will be displayed.
-| fill | `true` | `true` / `false` / `fade` / `blended` | Display the line graph fill. Use fill `blended` for bars.
+| fill | `true` | `true` / `false` / `fade` / `ambient` | Display the line graph fill. Use the optional value `ambient` (only valid for bars) for a theme-adaptive gradient with a right-shifted light or shadow accent.
 | points | `hover` | `true` / `false` / `hover` | Display graph data points.
 | legend | `true` | `true` / `false` | Display the graph legend (only shown when graph contains multiple entities).
 | average | `false` | `true` / `false` | Display average information.
@@ -834,23 +839,23 @@ bar_spacing: 4
 group_by: date
 ```
 
+#### Multiple stacked bar groups
+
 Multiple stack groups can be created to sit side-by-side within a single time slot, and each group is unique to its respective Y-axis.
 
 ![image](https://github.com/user-attachments/assets/d68d3f03-62d9-42d7-883c-a498009187e5)
 
-By using the per-entity bar_spacing option, a thinner bar can be rendered in the foreground.
+By using the per-entity `bar_spacing` option, a thinner bar can be rendered in the foreground.
 
 ```yaml
 type: custom:mini-graph-card-xt
 name: Consumption
 height: 200
 entities:
-  - entity: input_number.value_line
-    preset: 0
+  - static_value: 0
     graph: line
     show_legend: false
     show_fill: false
-    show_label: true
     line_width: 2
     line_style: 0.1 3
     color: grey
@@ -882,7 +887,7 @@ show:
   icon: false
   state: last
   labels: true
-  fill: blended
+  fill: ambient
   graph: bar
   x_labels: true
   x_lines: true
@@ -897,6 +902,20 @@ xtime_format:
     day: numeric
     weekday: short
 ```
+
+#### Adaptive ambient style
+
+The value `ambient` for the show configuration option `fill` applies a bar gradient with a right-shifted focal point, featuring a bright highlight in light mode and a deep shadow in dark mode.
+
+
+#### Render order of graphs
+
+Render order of graphsGraphs are rendered in the order they are listed in the YAML configuration.
+The old configuration logic drew all lines first, followed by all bars, and finally the points. This made it impossible to render lines on top of bars.
+
+In the example the first entity displays only its state value in the header. A baseline is drawn first as a static value, followed by an entity shown as bars, and a line overlaying both.
+
+
 
 ## Development
 
