@@ -197,6 +197,8 @@ We recommend looking at the [Example usage section](#example-usage) to understan
 | state_map | [state map object](#state-map-object) |  | v0.8.0 | List of entity states to convert (order matters as position becomes a value on the graph).
 | value_factor | number | 0 | v0.9.4 | Scale value by order of magnitude (e.g. convert Watts to kilo Watts), use negative value to scale down.
 | logarithmic | boolean | `false` | v0.10.0 | Use a Logarithmic scale for the graph
+| margin_x | number |  | NEXT_VERSION | Set custom X-axis margin (in pixels). Overrides the auto-calculated horizontal padding.
+| margin_y | number |  | NEXT_VERSION | Set custom Y-axis margin (in pixels). Overrides the auto-calculated vertical padding. Set to 0 to hide the minimal height offset on zero-value bars.
 | x_scale | number | `10` | xt-v0.2.0 | Set maximum number of X-axis labels, ticks or grid lines (marks).
 | x_major_breaks | number | `4` | xt-v0.2.0 | Display major (thick) label, tick and grid line every n-th mark.
 | x_format | list |  | xt-v0.2.0 | Set time format for X-axis.
@@ -945,6 +947,18 @@ The old configuration logic drew all lines first, followed by all bars, and fina
 
 In the example the first entity displays only its state value in the header. A baseline is drawn first as a static value, followed by an entity shown as bars, and a line overlaying both.
 
+
+#### Margins
+
+Graph margins are determined by the line width to ensure that lines, borders, and hover points are not clipped at the edges. Bars previously inherited this padding logic.
+
+Since lines and bars can now be drawn simultaneously, the padding behavior has been updated to handle mixed graph types gracefully and keep their margins aligned:
+
+- Lines-only: Margins default to the maximum `line_width` of all entities (Exception: X-margin is set to 0 when fill is enabled).
+- Bars-only: Margins default to a fixed fallback value (`DEFAULT_MARGIN = 5`).
+- Mixed (Lines & Bars): Margins follow the `line_width` to keep the bars aligned perfectly with the lines.
+
+The margin implementation extends the graph area for lines and bars by the margin. For bars this causes a small bar stub to appear even when a sensor value is exactly 0. To fix this, the new configuration option `margin_y` is introduced. Setting `margin_y: 0` removes this artificial extension for bar graphs completely (forcing an exact zero-baseline) for signed bars (only positive or negative values), with the acknowledged trade-off that regular lines might get slightly clipped at the top/bottom boundaries if both types are combined. Furthermore, an override also for the X-margin is possible.
 
 
 ## Development

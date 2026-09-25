@@ -27,6 +27,7 @@ const compress = data => lzStringCompress(JSON.stringify(data));
 const decompress = data => (typeof data === 'string' ? JSON.parse(lzStringDecompress(data)) : data);
 
 const getFirstDefinedItem = (...collection) => collection.find(item => typeof item !== 'undefined');
+const getFirstNumber = (...collection) => collection.find(item => typeof item === 'number');
 
 // eslint-disable-next-line max-len
 const compareArray = (a, b) => a.length === b.length && a.every((value, index) => value === b[index]);
@@ -39,6 +40,6 @@ const log = (message) => {
 export {
   getMin, getAvg, getMax, getMinMaxNumber,
   getTime, getMilli, getTimestamp, compress, decompress, log,
-  getFirstDefinedItem,
+  getFirstDefinedItem, getFirstNumber,
   compareArray,
 };

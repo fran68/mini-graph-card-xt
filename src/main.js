@@ -11,6 +11,7 @@ import './initialize';
 import { version } from '../package.json';
 
 import {
+  DEFAULT_MARGIN,
   DEFAULT_LINE_WIDTH,
   X_LABELS_HEIGHT,
   ICONS,
@@ -24,7 +25,7 @@ import {
   getMin, getAvg, getMax, getMinMaxNumber,
   getTime, getMilli, getTimestamp,
   compress, decompress,
-  getFirstDefinedItem,
+  getFirstDefinedItem, getFirstNumber,
   compareArray,
   log,
 } from './utils';
@@ -42,6 +43,7 @@ class MiniGraphCard extends LitElement {
     this.entity = [];
     this.line = [];
     this.bar = [];
+    this.margin = [];
     this.abs = [];
     this.line_width = {};
     this.fill = [];
@@ -131,16 +133,25 @@ class MiniGraphCard extends LitElement {
 
     if (!this.Graph || entitiesChanged) {
       if (this._hass) this.hass = this._hass;
+
+      const visibleLines = this.visibleEntitiesLines; // /wo static value lines
+      const hasLines = visibleLines.length > 0;
       this.line_width = getMinMaxNumber(
-        this.config.entities.filter(e => e.show_graph !== false && this.config.show.graph !== 'bar'),
+        visibleLines,
         'set_line_width',
         DEFAULT_LINE_WIDTH,
       );
+      const defaultX = hasLines ? (this.config.show.fill ? 0 : this.line_width.max) : 0;
+      const defaultY = hasLines ? this.line_width.max : DEFAULT_MARGIN;
+      const marginX = getFirstNumber(this.config.margin_x, defaultX);
+      const marginY = getFirstNumber(this.config.margin_y, defaultY);
+      this.margin = [marginX, marginY];
+
       this.Graph = this.config.entities.map(
         entity => new Graph(
           500,
           this.config.height,
-          [this.config.show.fill ? 0 : this.line_width.max, this.line_width.max],
+          this.margin,
           entity.set_graph,
           this.config.hours_to_show,
           this.config.points_per_hour,
@@ -446,8 +457,7 @@ class MiniGraphCard extends LitElement {
     let x_date;
 
     // Define width for graph
-    const margin = [show.fill ? 0 : this.line_width.max, this.line_width.max];
-    const graphWidth = viewWidth - margin[X] * 2;
+    const graphWidth = viewWidth - this.margin[X] * 2;
 
     // Default time format for x-axis
     let format = {
@@ -520,7 +530,7 @@ class MiniGraphCard extends LitElement {
       const line_weight = thick_flag ? 'xlines--thick' : 'xlines--thin';
       const label_weight = thick_flag ? 'xlabels--thick' : 'xlabels--thin';
 
-      x = margin[X] + position * graphWidth;
+      x = this.margin[X] + position * graphWidth;
       // Adjust position for label below data point
       x_date = group_by === 'date' ? x + point_step * graphWidth / 2 : x;
 
@@ -918,7 +928,11 @@ class MiniGraphCard extends LitElement {
 
   get visibleEntities() {
     return this.config.entities.filter(entity => entity.show_graph !== false
-      && !entity.static_value);
+      && !(entity.static_value !== undefined && entity.static_value !== null));
+  }
+
+  get visibleEntitiesLines() {
+    return this.visibleEntities.filter(entity => entity.set_graph === 'line');
   }
 
   get primaryYaxisEntities() {

@@ -1,6 +1,7 @@
 const URL_DOCS = 'https://github.com/fran68/mini-graph-card/blob/master/README.md';
 const FONT_SIZE = 14;
 const FONT_SIZE_HEADER = 14;
+const DEFAULT_MARGIN = 5;
 const DEFAULT_LINE_WIDTH = 5;
 const X_LABELS_HEIGHT = 25;
 const MAX_BARS = 96;
@@ -68,6 +69,7 @@ export {
   URL_DOCS,
   FONT_SIZE,
   FONT_SIZE_HEADER,
+  DEFAULT_MARGIN,
   DEFAULT_LINE_WIDTH,
   X_LABELS_HEIGHT,
   MAX_BARS,
