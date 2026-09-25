@@ -262,6 +262,12 @@ const style = css`
   .line--points[anim="false"],
   .line[anim="false"] {
     animation: pop .25s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .line-revealer[anim="true"][init] {
+    opacity: 1;
+    animation: reveal-line 1s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
   }
   .line--points[inactive],
   .line--rect[inactive],
@@ -446,6 +452,16 @@ const style = css`
     100% {
       opacity: 1;
       stroke-dashoffset: 0;
+    }
+  }
+  @keyframes reveal-line {
+    0% {
+      opacity: 1;
+      stroke-dashoffset: 0;
+    }
+    100% {
+      opacity: 1;
+      stroke-dashoffset: var(--stroke-dashoffset);
     }
   }`;
 

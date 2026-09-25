@@ -11,6 +11,10 @@
 >
 > ## History
 >
+> ### xt-0.6.x (2026-XX-XX)
+>
+> * Add [styles](#line-styling) for lines
+>
 > ### xt-0.5.x (2026-08-05)
 >
 > * Add [adaptive ambient style](#adaptive-ambient-style) for bars
@@ -167,6 +171,7 @@ We recommend looking at the [Example usage section](#example-usage) to understan
 | height | number | `150` | v0.0.1 | Set a custom height of the line graph.
 | bar_spacing | number | `4` | v0.9.0 | Set the spacing between bars in bar graph.
 | bar_spacing_group | number | `0` | xt-v0.3.0 | Set an additional spacing between bar groups (multiple entities) in bar graph.
+| line_style | string | `solid` | NEXT_VERSION | Set the styling of the line. Supports predefined styles (solid, dotted, dashdot) or a custom spatial pattern (e.g., 12 5 0.1 5)
 | line_width | number | `5` | v0.0.1 | Set the thickness of the line.
 | line_color | string/list | `var(--accent-color)` | v0.0.1 | Set a custom color for the graph line, provide a list of colors for multiple graph entries.
 | color_thresholds | list |  | v0.2.3 | Set thresholds for dynamic graph colors, see [Line color object](#line-color-object).
@@ -205,6 +210,7 @@ properties of the Entity object detailed in the following table (as per `sensor.
 | name | string |         | Set a custom display name, defaults to entity's friendly_name.
 | graph | string |         | Override for the graph type, `bar` or `line`.
 | bar_spacing | number |         | Override for the spacing between bars in bar graph.
+| line_style | string |         | NEXT_VERSION | Override for the line style.
 | line_width | number |         | Override for a thickness of the line.
 | color | string |         | Set a custom color, overrides all other color options including thresholds.
 | unit | string |         | Set a custom unit of measurement, overrides `unit` set in base config (`''` value for an empty unit).
@@ -903,9 +909,19 @@ xtime_format:
     weekday: short
 ```
 
+
 #### Adaptive ambient style
 
 The value `ambient` for the show configuration option `fill` applies a bar gradient with a right-shifted focal point, featuring a bright highlight in light mode and a deep shadow in dark mode.
+
+
+#### Line styling
+
+The `line_style` option allows you to fully customize how card lines are rendered. It can be applied globally under card options or overridden per entity for maximum flexibility.
+
+- Predefined Styles: Quickly switch between solid, dotted and dashdot.
+- Custom SVG Patterns: Pass any custom space-separated pattern (e.g., 12 5 0.1 5) utilizing native stroke-dasharray values.
+- Animations: Fully supports CSS animations applied directly to the line style for dynamic visual effects.
 
 
 #### Render order of graphs

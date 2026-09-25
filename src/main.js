@@ -11,9 +11,11 @@ import './initialize';
 import { version } from '../package.json';
 
 import {
+  DEFAULT_LINE_WIDTH,
   X_LABELS_HEIGHT,
   ICONS,
   UPDATE_PROPS,
+  LINE_STYLES,
   X, Y, V,
   ONE_HOUR,
   TIME_STEPS,
@@ -131,8 +133,8 @@ class MiniGraphCard extends LitElement {
       if (this._hass) this.hass = this._hass;
       this.line_width = getMinMaxNumber(
         this.config.entities.filter(e => e.show_graph !== false && this.config.show.graph !== 'bar'),
-        'line_width',
-        this.config.line_width,
+        'set_line_width',
+        DEFAULT_LINE_WIDTH,
       );
       this.Graph = this.config.entities.map(
         entity => new Graph(
@@ -599,30 +601,88 @@ class MiniGraphCard extends LitElement {
       </mask>`;
   }
 
-  renderSvgLine(line, i) {
+  /**
+   * Renders the SVG line/mask including the main path and the optional revealer.
+   *
+   * @param {any} line - The line object.
+   * @param {number} index - The index of the current entity.
+   * @returns {any} A Lit SVG template.
+   */
+  renderSvgLine(line, index) {
     if (!line) return;
 
-    const path = svg`
-      <path
-        class='line'
-        .id=${i}
-        anim=${this.config.animate} ?init=${this.length[i]}
-        style="animation-delay: ${this.config.animate ? `${i * 0.5}s` : '0s'}"
-        fill='none'
-        stroke-dasharray=${this.length[i] || 'none'} stroke-dashoffset=${this.length[i] || 'none'}
-        stroke=${'white'}
-        stroke-width=${this.config.entities[i].line_width || this.config.line_width}
-        d=${this.line[i]}
-      />`;
+    const entityConfig = this.config.entities[index];
+    const lengthVal = this.length[index];
+    const lineWidth = entityConfig.set_line_width;
 
+    const input = entityConfig.set_line_style || 'solid';
+    const lineStyle = LINE_STYLES[input] || input.trim();
+
+    const animate = !!this.config.animate;
+    const animationDelay = animate ? `${index * 0.5}s` : '0s';
+    const hasLength = !!lengthVal;
+
+    // Main path is triggered when animation is active AND the line style is 'none' (solid)
+    const isNoneAnimation = animate && lineStyle === 'none';
+
+    // A revealer mask is used when animation is active AND the line style is NOT 'none' (solid)
+    const useReveal = animate && lineStyle !== 'none';
+
+    // Use the path length if animation is active and lineStyle is 'none'. Otherwise, use lineStyle.
+    const strokeDasharray = isNoneAnimation
+      ? `${lengthVal || 'none'}`
+      : `${lineStyle}`;
+
+    const strokeDashoffset = isNoneAnimation
+      ? `${lengthVal || 'none'}`
+      : '';
+
+    // Init trigger for the .line[anim="true"][init] animation in CSS
+    const mainInit = isNoneAnimation && hasLength;
+
+    /* eslint-disable indent */
     return svg`
-      <mask id=${`line-${this.id}-${i}`}>
-        ${path}
+      <mask id=${`line-${this.id}-${index}`}>
+        <!-- Main path -->
+        <path
+          class='line'
+          .id=${index}
+          anim=${isNoneAnimation}
+          ?init=${mainInit}
+          style=${animate ? `animation-delay: ${animationDelay};` : ''}
+          fill='none'
+          stroke-dasharray=${strokeDasharray}
+          stroke-dashoffset=${strokeDashoffset}
+          stroke='white'
+          stroke-width=${lineWidth}
+          d=${this.line[index]}
+        />
+
+        <!-- Revealer (Black mask line that moves backwards for styled paths) -->
+        ${useReveal ? svg`
+          <path
+            class='line-revealer'
+            anim='true'
+            ?init=${hasLength}
+            style="
+              animation-delay: ${animationDelay};
+              --stroke-dashoffset: ${lengthVal * -1 || 'none'};
+            "
+            fill='none'
+            stroke-dasharray=${lengthVal || 'none'}
+            stroke='black'
+            stroke-width=${lineWidth + 4}
+            d=${this.line[index]}
+          />`
+          : ''
+        }
       </mask>
     `;
+    /* eslint-enable indent */
   }
 
   renderSvgPoint(point, i) {
+    const lineWidth = this.config.entities[i].set_line_width;
     const color = this.gradient[i] ? this.computeColor(point[V], i) : 'inherit';
     return svg`
       <circle
@@ -631,7 +691,7 @@ class MiniGraphCard extends LitElement {
         style=${`--mcg-hover: ${color};`}
         stroke=${color}
         fill=${color}
-        cx=${point[X]} cy=${point[Y]} r=${this.config.entities[i].line_width || this.config.line_width}
+        cx=${point[X]} cy=${point[Y]} r=${lineWidth}
         @mouseover=${() => this.setTooltip(i, point[3], point[V])}
         @mouseout=${() => (this.tooltip = {})}
       />
@@ -640,6 +700,7 @@ class MiniGraphCard extends LitElement {
 
   renderSvgPoints(points, i) {
     if (!points) return;
+    const lineWidth = this.config.entities[i].set_line_width;
     const color = this.computeColor(this.entity[i].state, i);
     return svg`
       <g class='line--points'
@@ -650,7 +711,7 @@ class MiniGraphCard extends LitElement {
         style="animation-delay: ${this.config.animate ? `${i * 0.5 + 0.5}s` : '0s'}"
         fill=${color}
         stroke=${color}
-        stroke-width=${(this.config.entities[i].line_width || this.config.line_width) / 2}>
+        stroke-width=${lineWidth / 2}>
         ${points.map(point => this.renderSvgPoint(point, i))}
       </g>`;
   }

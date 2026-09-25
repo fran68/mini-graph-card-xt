@@ -125,6 +125,7 @@ export default (config) => {
     color_thresholds: [],
     color_thresholds_transition: 'smooth',
     line_width: 5,
+    line_style: 'solid',
     bar_spacing: 4,
     bar_spacing_group: 0,
     compress: true,
@@ -146,6 +147,8 @@ export default (config) => {
     conf.entities[i].set_graph = entity.graph || conf.show.graph;
     conf.entities[i].set_y_axis = entity.y_axis || 'primary';
     conf.entities[i].set_bar_spacing = entity.bar_spacing || conf.bar_spacing;
+    conf.entities[i].set_line_width = entity.line_width || conf.line_width;
+    conf.entities[i].set_line_style = entity.line_style || conf.line_style;
     if (entity.set_graph === 'bar' && entity.show_graph !== false) {
       if (entity.stack) {
         const stack = `${entity.stack}_${entity.set_y_axis}`;

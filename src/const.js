@@ -1,6 +1,7 @@
 const URL_DOCS = 'https://github.com/fran68/mini-graph-card/blob/master/README.md';
 const FONT_SIZE = 14;
 const FONT_SIZE_HEADER = 14;
+const DEFAULT_LINE_WIDTH = 5;
 const X_LABELS_HEIGHT = 25;
 const MAX_BARS = 96;
 const ICONS = {
@@ -45,6 +46,12 @@ const DEFAULT_SHOW = {
   fill: true,
   points: 'hover',
 };
+const LINE_STYLES = {
+  dotted: '0.1 6',
+  dashed: '12 8',
+  dashdot: '12 8 0.1 8',
+  solid: 'none',
+};
 
 const X = 0;
 const Y = 1;
@@ -61,12 +68,14 @@ export {
   URL_DOCS,
   FONT_SIZE,
   FONT_SIZE_HEADER,
+  DEFAULT_LINE_WIDTH,
   X_LABELS_HEIGHT,
   MAX_BARS,
   ICONS,
   DEFAULT_COLORS,
   UPDATE_PROPS,
   DEFAULT_SHOW,
+  LINE_STYLES,
   X,
   Y,
   V,
