@@ -5,7 +5,7 @@ import {
 } from './const';
 
 export default class Graph {
-  constructor(width, height, margin, graph, hours = 24, points = 1, aggregateFuncName = 'avg', groupBy = 'interval', smoothing = true, logarithmic = false, tension = 0.15) {
+  constructor(width, height, margin, graph, hours = 24, points = 1, aggregateFuncName = 'avg', groupBy = 'interval', baseline = 0, smoothing = true, logarithmic = false, tension = 0.15) {
     const aggregateFuncMap = {
       avg: this._average,
       median: this._median,
@@ -29,6 +29,7 @@ export default class Graph {
     this._lmax = null;
     this._lmin = null;
     this._yRatio = null;
+    this._baseline = baseline;
     this._baselineCoordY = null;
     this._baselineRatio = null;
     this.points = points;
@@ -47,10 +48,8 @@ export default class Graph {
   set max(max) {
     if (this._max !== max) {
       this._max = max;
-      this._lmax = null;
-      this._yRatio = null;
-      this._baselineCoordY = null;
-      this._baselineRatio = null;
+      this._lmax = this._logarithmic ? Math.log10(Math.max(1, max)) : max;
+      this._updateYRatio();
     }
   }
 
@@ -59,53 +58,47 @@ export default class Graph {
   set min(min) {
     if (this._min !== min) {
       this._min = min;
-      this._lmin = null;
-      this._yRatio = null;
-      this._baselineCoordY = null;
-      this._baselineRatio = null;
+      this._lmin = this._logarithmic ? Math.log10(Math.max(1, min)) : min;
+      this._updateYRatio();
     }
   }
 
-  get lmax() {
-    if (this._lmax === null) {
-      this._lmax = this._logarithmic ? Math.log10(Math.max(1, this.max)) : this.max;
-    }
-    return this._lmax;
-  }
-
-  get lmin() {
-    if (this._lmin === null) {
-      this._lmin = this._logarithmic ? Math.log10(Math.max(1, this.min)) : this.min;
-    }
-    return this._lmin;
-  }
-
-  get yRatio() {
-    if (this._yRatio === null) {
-      this._yRatio = ((this.lmax - this.lmin) / this.height) || 1;
-    }
-    return this._yRatio;
+  _updateYRatio() {
+    this._yRatio = ((this._lmax - this._lmin) / this.height) || 1;
+    this._baselineCoordY = null;
+    this._baselineRatio = null;
   }
 
   get baselineCoordY() {
     if (this._baselineCoordY === null) {
-      let baselineCoordY;
+      let baseline = this._baseline;
 
-      // only positive values, positive and zero values, or only zero values
-      if (this.lmax >= 0 && this.lmin >= 0) baselineCoordY = this.height + this.margin[Y] * 4;
-      // only negative values, negative and zero values
-      else if (this.lmax <= 0) baselineCoordY = 0;
-      // positive and negative values (sign values)
-      else [[, baselineCoordY]] = this._calcY([[0, 0, 0]]);
-      this._baselineCoordY = baselineCoordY;
+      if (baseline === 'top') baseline = this.max;
+      else if (baseline === 'bottom') baseline = this.min;
+      else if (typeof baseline !== 'number') baseline = 0;
+
+      // Positive values (including positive and zero values, or only zero values)
+      if (baseline <= this.max && baseline <= this.min)
+        // Absolute lower edge
+        this._baselineCoordY = this.height + this.margin[Y] * 4;
+      // Negative values (including negative and zero values)
+      else if (baseline >= this.max)
+        // Absolute upper edge
+        this._baselineCoordY = 0;
+      // Sign values (Positive and negative values)
+      else {
+        // _calcY calculates the exact position between (including logarithmization)
+        const [[, calculatedY]] = this._calcY([[0, 0, baseline]]);
+        this._baselineCoordY = calculatedY;
+      }
     }
     return this._baselineCoordY;
   }
 
   get baselineRatio() {
-    if (this._baselineRatio === null) {
+    if (this._baselineRatio === null)
       this._baselineRatio = this.baselineCoordY / (this.height + this.margin[Y] * 4);
-    }
+
     return this._baselineRatio;
   }
 
@@ -169,7 +162,7 @@ export default class Graph {
   _calcY(coords) {
     const coords2 = coords.map((coord) => {
       const val = this._logarithmic ? Math.log10(Math.max(1, coord[V])) : coord[V];
-      const coordY = this.height - ((val - this.lmin) / this.yRatio) + this.margin[Y] * 2;
+      const coordY = this.height - ((val - this._lmin) / this._yRatio) + this.margin[Y] * 2;
       return [coord[X], coordY, coord[V]];
     });
 

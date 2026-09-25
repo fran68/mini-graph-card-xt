@@ -1,4 +1,4 @@
-import { log } from './utils';
+import { log, getFirstDefinedItem } from './utils';
 import {
   URL_DOCS,
   FONT_SIZE,
@@ -128,6 +128,7 @@ export default (config) => {
     line_style: 'solid',
     bar_spacing: 4,
     bar_spacing_group: 0,
+    baseline: 0,
     compress: true,
     smoothing: true,
     state_map: [],
@@ -149,6 +150,8 @@ export default (config) => {
     conf.entities[i].set_bar_spacing = entity.bar_spacing || conf.bar_spacing;
     conf.entities[i].set_line_width = entity.line_width || conf.line_width;
     conf.entities[i].set_line_style = entity.line_style || conf.line_style;
+    conf.entities[i].set_baseline = getFirstDefinedItem(entity.baseline,
+      conf[`${conf.entities[i].set_graph}_baseline`], conf.baseline);
     if (entity.set_graph === 'bar' && entity.show_graph !== false) {
       if (entity.stack) {
         const stack = `${entity.stack}_${entity.set_y_axis}`;

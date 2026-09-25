@@ -14,6 +14,7 @@
 > ### xt-0.6.x (2026-XX-XX)
 >
 > * Add [styles](#line-styling) for lines
+> * Add baseline configuration options, see [baseline](#baseline--reference-lines)
 >
 > ### xt-0.5.x (2026-08-05)
 >
@@ -23,7 +24,7 @@
 > ### xt-0.4.x (2026-08-04)
 >
 > * Combine [lines and bars](#lines-and-bars) in the same cart
-> * Add a [baseline](#baselining) to graphs
+> * Add a [baseline](#baseline--reference-lines) to graphs
 >     - Bars with negative values
 >     - Lines with fill to the baseline
 > * Stack groups for multiple entities in [stacked overlaid bars](#stacked-overlaid-bars). Thanks to @ildar170975 for the idea.
@@ -171,7 +172,10 @@ We recommend looking at the [Example usage section](#example-usage) to understan
 | height | number | `150` | v0.0.1 | Set a custom height of the line graph.
 | bar_spacing | number | `4` | v0.9.0 | Set the spacing between bars in bar graph.
 | bar_spacing_group | number | `0` | xt-v0.3.0 | Set an additional spacing between bar groups (multiple entities) in bar graph.
-| line_style | string | `solid` | NEXT_VERSION | Set the styling of the line. Supports predefined styles (solid, dotted, dashdot) or a custom spatial pattern (e.g., 12 5 0.1 5)
+| baseline | number | `0` | NEXT_VERSION | Reference line for fills and bars. Visualizes deviations from this value.
+| line_baseline | number |  | NEXT_VERSION | Graph-specific override for the line reference line.
+| bar_baseline | number |  | NEXT_VERSION | Graph-specific override for the bar reference line.
+| line_style | string | `solid` | NEXT_VERSION | Set the styling of the line. Supports predefined styles (solid, dotted, dashdot) or a custom spatial pattern (e.g., 12 5 0.1 5).
 | line_width | number | `5` | v0.0.1 | Set the thickness of the line.
 | line_color | string/list | `var(--accent-color)` | v0.0.1 | Set a custom color for the graph line, provide a list of colors for multiple graph entries.
 | color_thresholds | list |  | v0.2.3 | Set thresholds for dynamic graph colors, see [Line color object](#line-color-object).
@@ -210,6 +214,7 @@ properties of the Entity object detailed in the following table (as per `sensor.
 | name | string |         | Set a custom display name, defaults to entity's friendly_name.
 | graph | string |         | Override for the graph type, `bar` or `line`.
 | bar_spacing | number |         | Override for the spacing between bars in bar graph.
+| baseline | number |         | NEXT_VERSION | Override for the baseline / reference line.
 | line_style | string |         | NEXT_VERSION | Override for the line style.
 | line_width | number |         | Override for a thickness of the line.
 | color | string |         | Set a custom color, overrides all other color options including thresholds.
@@ -747,7 +752,7 @@ group_by: hour
 Example: The graph type defaults to `line` and there is no global graph configuration under the `show:` option. By defining the graph type explicitly for the second entity the graph is drawn as a `bar`.  
 
 
-#### Baselining
+#### Baseline / Reference Lines
 
 The baseline feature allows bars with negative values to be drawn. Bars fill the area between their values and the baseline, which is the zero line by default. 
 
@@ -756,6 +761,15 @@ The baseline feature allows bars with negative values to be drawn. Bars fill the
 The baseline also serves as the reference for line graph fills and their gradients, which now fade out toward this baseline.
 
 ![image](https://github.com/user-attachments/assets/9adced1b-768c-4ba7-9852-2a28f78d435e)
+
+The baseline option allows you to shift the chart's reference line (which defaults to zero). Instead of rendering fills and bars from the bottom or the zero-line up, the card will display positive and negative deviations directly from your custom baseline. This is especially useful for visualizing fluctuations in line fills and bar heights. 
+
+Configuration is highly flexible and can be defined at three levels. If multiple baselines are defined, they override each other in the following order (from lowest to highest priority): 
+
+- Global: Applies to the entire card (baseline) - *Lowest*
+- Graph Type Specific: Targets lines or bars individually (line_baseline / bar_baseline)
+- Per-Entity: Overrides the baseline for a specific entity (baseline) - *Highest*
+
 
 
 #### Cubic Bézier curve
