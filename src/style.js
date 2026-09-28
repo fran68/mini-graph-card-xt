@@ -265,6 +265,10 @@ const style = css`
     stroke-linecap: round;
     stroke-linejoin: round;
   }
+  .line--points[anim="true"] {
+    opacity: 0;
+    animation: pop .5s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+  }
   .line-revealer[anim="true"][init] {
     opacity: 1;
     animation: reveal-line 1s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
@@ -299,10 +303,15 @@ const style = css`
   }
   .bar {
     transition: opacity .25s cubic-bezier(0.215, 0.61, 0.355, 1);
+    transform-origin: var(--bar-x) var(--baseline-y);
   }
   .bar:hover {
     opacity: .5;
     cursor: pointer;
+  }
+  .bars[anim] .bar {
+    transform: scaleY(0);
+    animation: bar 1s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
   }
   ha-card[gradient] .line--point:hover {
     fill: var(--primary-text-color, white);
@@ -441,6 +450,11 @@ const style = css`
     0% { opacity: 0; }
     50% { opacity: 0; }
     100% { opacity: 1; }
+  }
+  @keyframes bar {
+    to {
+      transform: scaleY(1);
+    }
   }
   @keyframes dash {
     0% {

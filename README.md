@@ -15,6 +15,7 @@
 >
 > * Add [styles](#line-styling) for lines
 > * Add baseline configuration options, see [baseline](#baseline--reference-lines)
+> * Update bar animation logic, make it baseline aware, implement [staggered waterfall effect](#bar-animate-horizontal)
 >
 > ### xt-0.5.x (2026-08-05)
 >
@@ -170,6 +171,7 @@ We recommend looking at the [Example usage section](#example-usage) to understan
 | show | list |  | v0.2.0 | List of UI elements to display/hide, for available items see [available show options](#available-show-options).
 | animate | boolean | `false` | v0.2.0 | Add a reveal animation to the graph.
 | height | number | `150` | v0.0.1 | Set a custom height of the line graph.
+| <a id="bar-animate-horizontal">bar_animate_horizontal</a> | number | `0` | NEXT_VERSION | Set a staggered delay for horizontal bar animation (e.g. 0.1).
 | bar_spacing | number | `4` | v0.9.0 | Set the spacing between bars in bar graph.
 | bar_spacing_group | number | `0` | xt-v0.3.0 | Set an additional spacing between bar groups (multiple entities) in bar graph.
 | baseline | number | `0` | NEXT_VERSION | Reference line for fills and bars. Visualizes deviations from this value.

@@ -772,14 +772,10 @@ class MiniGraphCard extends LitElement {
   renderSvgBars(bars, index) {
     if (!bars) return;
     const fill = ['ambient'].find(ele => ele === this.config.show.fill);
+    const horizontalDelay = this.config.bar_animate_horizontal;
     const items = bars.map((bar, i) => {
-      const animation = this.config.animate
-        ? svg`
-          <animate attributeName='y' from=${this.config.height} to=${bar.y} dur='1s' fill='remove'
-            calcMode='spline' keyTimes='0; 1' keySplines='0.215 0.61 0.355 1'>
-          </animate>`
-        : '';
       const color = this.computeColor(bar.value, index);
+      const baselineY = bar.value >= 0 ? (bar.y + bar.height) : bar.y;
       return svg`
         <defs>
           <linearGradient id=${`fill-ambient-${this.id}-${index}-${i}`} x1="0%" y1="0%" x2="100%" y2="0%">
@@ -796,9 +792,13 @@ class MiniGraphCard extends LitElement {
         <rect class='bar' x=${bar.x} y=${bar.y}
           height=${bar.height} width=${bar.width} fill=${color}
           mask=${fill ? `url(#fill-${fill}-mask-${this.id}-${index}-${i})` : ''}
+          style="
+            animation-delay: ${this.config.animate ? `${i * horizontalDelay}s` : '0s'};
+            --bar-x: ${bar.x}px;
+            --baseline-y: ${baselineY}px;
+          "
           @mouseover=${() => this.setTooltip(index, i, bar.value)}
           @mouseout=${() => (this.tooltip = {})}>
-          ${animation}
         </rect>`;
     });
     return svg`
