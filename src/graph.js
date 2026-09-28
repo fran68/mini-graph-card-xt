@@ -117,14 +117,27 @@ export default class Graph {
     const requiredNumOfPoints = Math.ceil(this.hours * this.points);
     histGroups.length = requiredNumOfPoints;
 
-    this.coords = this._calcPoints(histGroups);
-    if (this._graph === 'bar') {
-      this.min = Math.min(...this.coords.slice(1).map(item => Number(item[V])));
-      this.max = Math.max(...this.coords.slice(1).map(item => Number(item[V])));
-    } else {
-      this.min = Math.min(...this.coords.map(item => Number(item[V])));
-      this.max = Math.max(...this.coords.map(item => Number(item[V])));
+    const calculatedCoords = this._calcPoints(histGroups);
+    if (calculatedCoords.length === 0) return;
+
+    // Determine the starting array (bars skip the first pseudo-value)
+    this.coords = this._graph === 'bar' ? calculatedCoords.slice(1) : calculatedCoords;
+    if (this.coords.length === 0) return;
+
+    // Determine min and max in a single pass
+    let currentMin = Number(this.coords[0][V]);
+    let currentMax = currentMin;
+
+    const len = this.coords.length;
+    for (let i = 1; i < len; i += 1) {
+      const val = Number(this.coords[i][V]);
+      if (val < currentMin) currentMin = val;
+      if (val > currentMax) currentMax = val;
     }
+
+    // Pass values to setters (triggers internal updates)
+    this.min = currentMin;
+    this.max = currentMax;
   }
 
   _reducer(res, item) {
@@ -296,7 +309,7 @@ export default class Graph {
     const coords = this._calcY(this.coords);
     const shrink = spacing_group / total;
     const xRatio = (this.width / Math.ceil(this.hours * this.points - 1)) / total;
-    return coords.slice(1).map((coord, i) => ({
+    return coords.map((coord, i) => ({
       x: (xRatio * i * total) + ((xRatio - shrink) * position)
         + this.margin[X] + (spacing_group + spacing) / 2,
       y: Math.min(this.baselineCoordY, coord[Y]),
