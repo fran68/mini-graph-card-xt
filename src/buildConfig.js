@@ -109,6 +109,8 @@ export default (config) => {
       `"line_color_above/line_color_below" was removed, please use "color_thresholds".\n See ${URL_DOCS}`,
     );
 
+  const cleanConfig = JSON.parse(JSON.stringify(config));
+
   const conf = {
     animate: false,
     hour24: false,
@@ -138,7 +140,7 @@ export default (config) => {
     tap_action: {
       action: 'more-info',
     },
-    ...JSON.parse(JSON.stringify(config)),
+    ...cleanConfig,
     show: { ...DEFAULT_SHOW, ...config.show },
   };
 

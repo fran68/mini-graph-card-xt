@@ -1,7 +1,6 @@
 import { LitElement, html, svg } from 'lit-element';
 import localForage from 'localforage/src/localforage';
 import { stateIcon } from 'custom-card-helpers';
-import SparkMD5 from 'spark-md5';
 import { interpolateRgb } from 'd3-interpolate';
 import Graph from './graph';
 import style from './style';
@@ -27,7 +26,7 @@ import {
   getTime, getMilli, getTimestamp,
   compress, decompress,
   getFirstDefinedItem, getFirstNumber,
-  compareArray,
+  fastHash, compareArray,
   log,
 } from './utils';
 
@@ -57,7 +56,7 @@ class MiniGraphCard extends LitElement {
     this.updating = false;
     this.stateChanged = false;
     this.initial = true;
-    this._md5Config = undefined;
+    this._cacheKey = undefined;
   }
 
   static get styles() {
@@ -131,7 +130,7 @@ class MiniGraphCard extends LitElement {
 
   setConfig(config) {
     this.config = buildConfig(config, this.config);
-    this._md5Config = SparkMD5.hash(JSON.stringify(this.config));
+    this._cacheKey = fastHash(JSON.stringify(this.config));
     const entitiesChanged = !compareArray(this.config.entities || [], config.entities);
 
     if (!this.Graph || entitiesChanged) {
@@ -964,8 +963,20 @@ class MiniGraphCard extends LitElement {
   }
 
   get visibleEntities() {
-    return this.config.entities.filter(entity => entity.show_graph !== false
-      && !(entity.static_value !== undefined && entity.static_value !== null));
+    // 1. Filter only real, visible entities (excluding static lines and hidden graphs)
+    const realVisible = this.config.entities.filter(
+      entity => entity.show_graph !== false
+      && (entity.static_value === undefined || entity.static_value === null),
+    );
+
+    // 2. If real entities exist, return them as the preferred selection
+    if (realVisible.length > 0) {
+      return realVisible;
+    }
+
+    // 3. Fallback: If NO real entities are visible, include static lines
+    // to ensure the chart can calculate valid bounds and prevent a crash.
+    return this.config.entities.filter(entity => entity.show_graph !== false);
   }
 
   get visibleEntitiesLines() {
@@ -1222,14 +1233,14 @@ class MiniGraphCard extends LitElement {
   }
 
   async getCache(key, compressed) {
-    const data = await localForage.getItem(`${key}_${this._md5Config}${(compressed ? '' : '_raw')}`);
+    const data = await localForage.getItem(`${key}_${this._cacheKey}${(compressed ? '' : '_raw')}`);
     return data ? (compressed ? decompress(data) : data) : null;
   }
 
   async setCache(key, data, compressed) {
     return compressed
-      ? localForage.setItem(`${key}_${this._md5Config}`, compress(data))
-      : localForage.setItem(`${key}_${this._md5Config}_raw`, data);
+      ? localForage.setItem(`${key}_${this._cacheKey}`, compress(data))
+      : localForage.setItem(`${key}_${this._cacheKey}_raw`, data);
   }
 
   async updateEntity(entity, index, initStart, end) {

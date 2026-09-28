@@ -29,6 +29,17 @@ const decompress = data => (typeof data === 'string' ? JSON.parse(lzStringDecomp
 const getFirstDefinedItem = (...collection) => collection.find(item => typeof item !== 'undefined');
 const getFirstNumber = (...collection) => collection.find(item => typeof item === 'number');
 
+const fastHash = (str) => {
+  let hash = 0;
+  if (str.length === 0) return hash;
+  for (let i = 0; i < str.length; i += 1) {
+    const chr = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + chr;
+    hash |= 0;
+  }
+  return Math.abs(hash).toString(16);
+};
+
 // eslint-disable-next-line max-len
 const compareArray = (a, b) => a.length === b.length && a.every((value, index) => value === b[index]);
 
@@ -41,5 +52,5 @@ export {
   getMin, getAvg, getMax, getMinMaxNumber,
   getTime, getMilli, getTimestamp, compress, decompress, log,
   getFirstDefinedItem, getFirstNumber,
-  compareArray,
+  fastHash, compareArray,
 };

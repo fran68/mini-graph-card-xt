@@ -41,8 +41,8 @@ export default class Graph {
     this.height = height - margin[Y] * 4;
     this.margin = margin;
     this._graph = graph;
-    this._max = 0;
-    this._min = 0;
+    this._max = -Infinity;
+    this._min = Infinity;
     this._lmax = null;
     this._lmin = null;
     this._yRatio = null;
