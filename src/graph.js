@@ -5,7 +5,24 @@ import {
 } from './const';
 
 export default class Graph {
-  constructor(width, height, margin, graph, hours = 24, points = 1, aggregateFuncName = 'avg', groupBy = 'interval', baseline = 0, smoothing = true, logarithmic = false, tension = 0.15) {
+  constructor(
+    width,
+    height,
+    margin,
+    graph,
+    hours = 24,
+    points = 1,
+    aggregateFuncName = 'avg',
+    groupBy = 'interval',
+    baseline = 0,
+    smoothing = true,
+    logarithmic = false,
+    tension = 0.15,
+    barTotalStacks,
+    barStackPosition,
+    bar_spacing,
+    bar_spacing_group,
+  ) {
     const aggregateFuncMap = {
       avg: this._average,
       median: this._median,
@@ -41,6 +58,31 @@ export default class Graph {
     this._groupBy = groupBy;
     this._endTime = 0;
     this._tension = tension;
+    this._barTotalStacks = barTotalStacks;
+    this._barStackPosition = barStackPosition; // undefined if show_graph = false
+    this._barSpacing = bar_spacing;
+    this._barSpacingGroup = bar_spacing_group;
+    this._barWidth = null;
+    this._barBaseExpression = null;
+    this._barStepMultiplier = null;
+    this._init();
+  }
+
+  _init() {
+    if (this._graph === 'bar') {
+      const total = this._barTotalStacks;
+      const spacing = this._barSpacing;
+      const spacing_group = this._barSpacingGroup;
+
+
+      const shrink = spacing_group / total;
+      const totalPoints = Math.ceil(this.hours * this.points - 1) || 1;
+      const xRatio = (this.width / totalPoints) / total;
+      this._barWidth = xRatio - (spacing + shrink);
+      this._barBaseExpression = ((xRatio - shrink) * this._barStackPosition)
+        + this.margin[X] + (spacing_group + spacing) / 2;
+      this._barStepMultiplier = xRatio * total;
+    }
   }
 
   get max() { return this._max; }
@@ -305,18 +347,34 @@ export default class Graph {
     return fill;
   }
 
-  getBars(position, total, spacing = 4, spacing_group = 0) {
+  getBars() {
     const coords = this._calcY(this.coords);
-    const shrink = spacing_group / total;
-    const xRatio = (this.width / Math.ceil(this.hours * this.points - 1)) / total;
-    return coords.map((coord, i) => ({
-      x: (xRatio * i * total) + ((xRatio - shrink) * position)
-        + this.margin[X] + (spacing_group + spacing) / 2,
-      y: Math.min(this.baselineCoordY, coord[Y]),
-      height: Math.max(this.baselineCoordY, coord[Y]) - Math.min(this.baselineCoordY, coord[Y]),
-      width: xRatio - (spacing + shrink),
-      value: coord[V],
-    }));
+    const len = coords.length;
+    if (len === 0) return [];
+
+    const stepMultiplier = this._barStepMultiplier;
+    const baseExpression = this._barBaseExpression;
+    const barWidth = this._barWidth;
+    const baselineY = this.baselineCoordY;
+
+    const bars = new Array(len);
+    for (let i = 0; i < len; i += 1) {
+      const coord = coords[i];
+      const [, coordY, coordV] = coord;
+
+      const minY = coordY < baselineY ? coordY : baselineY;
+      const maxY = coordY > baselineY ? coordY : baselineY;
+
+      bars[i] = {
+        x: (stepMultiplier * i) + baseExpression,
+        y: minY,
+        height: maxY - minY,
+        width: barWidth,
+        value: coordV,
+      };
+    }
+
+    return bars;
   }
 
   _midPoint(Ax, Ay, Bx, By) {

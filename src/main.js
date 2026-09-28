@@ -14,6 +14,7 @@ import {
   DEFAULT_MARGIN,
   DEFAULT_LINE_WIDTH,
   X_LABELS_HEIGHT,
+  MAX_BARS,
   ICONS,
   UPDATE_PROPS,
   LINE_STYLES,
@@ -44,6 +45,8 @@ class MiniGraphCard extends LitElement {
     this.line = [];
     this.bar = [];
     this.margin = [];
+    this.group = {};
+    this.barStackPosition = [];
     this.abs = [];
     this.line_width = {};
     this.fill = [];
@@ -134,21 +137,51 @@ class MiniGraphCard extends LitElement {
     if (!this.Graph || entitiesChanged) {
       if (this._hass) this.hass = this._hass;
 
-      const visibleLines = this.visibleEntitiesLines; // /wo static value lines
+      const visibleLines = this.visibleEntitiesLines || []; // /wo static value lines
       const hasLines = visibleLines.length > 0;
-      this.line_width = getMinMaxNumber(
-        visibleLines,
-        'set_line_width',
-        DEFAULT_LINE_WIDTH,
-      );
+      this.line_width = getMinMaxNumber(visibleLines, 'set_line_width', DEFAULT_LINE_WIDTH);
       const defaultX = hasLines ? (this.config.show.fill ? 0 : this.line_width.max) : 0;
       const defaultY = hasLines ? this.line_width.max : DEFAULT_MARGIN;
-      const marginX = getFirstNumber(this.config.margin_x, defaultX);
-      const marginY = getFirstNumber(this.config.margin_y, defaultY);
-      this.margin = [marginX, marginY];
+      this.margin = [
+        getFirstNumber(this.config.margin_x, defaultX),
+        getFirstNumber(this.config.margin_y, defaultY),
+      ];
+
+      this.group = {};
+      let slot = 0;
+      this.barStackPosition = this.config.entities.map((entityConfig, index) => {
+        // Skip entities that are not visible bar charts
+        if (entityConfig.set_graph !== 'bar' || entityConfig.show_graph === false) {
+          return undefined;
+        }
+
+        // Determine the unique key for the group (stacked or standalone)
+        const key = entityConfig.stack
+          ? `${entityConfig.stack}_${entityConfig.set_y_axis}`
+          : `standalone_${index}`;
+
+        // If the key is new, assign the current slot and increment it
+        if (this.group[key] === undefined) {
+          this.group[key] = slot;
+          slot += 1;
+        }
+
+        return this.group[key];
+      });
+
+      // Total stack number: 'slot' matches exactly the number of unique groups!
+      const visibleBarStacks = slot;
+
+      if (visibleBarStacks > 0) {
+        if (this.config.hours_to_show * this.config.points_per_hour * visibleBarStacks
+          > MAX_BARS) {
+          this.config.points_per_hour = MAX_BARS / (this.config.hours_to_show * visibleBarStacks);
+          log(`Not enough space, adjusting points_per_hour to ${this.config.points_per_hour}`);
+        }
+      }
 
       this.Graph = this.config.entities.map(
-        entity => new Graph(
+        (entity, index) => new Graph(
           500,
           this.config.height,
           this.margin,
@@ -165,6 +198,10 @@ class MiniGraphCard extends LitElement {
           ),
           this.config.logarithmic,
           this.config.tension,
+          visibleBarStacks, // bar related
+          this.barStackPosition[index], // bar related
+          entity.set_bar_spacing, // bar related
+          this.config.bar_spacing_group, // bar related
         ),
       );
     }
@@ -1087,21 +1124,13 @@ class MiniGraphCard extends LitElement {
     this.updateBounds();
 
     if (config.show.graph) {
-      let graphPos = 0;
       this.entity.forEach((entity, i) => {
         if (!entity || this.Graph[i].coords.length === 0) return;
         const entityConfig = config.entities[i];
         const bound = entityConfig.y_axis === 'secondary' ? this.boundSecondary : this.bound;
         [this.Graph[i].min, this.Graph[i].max] = [bound[0], bound[1]];
         if (entityConfig.set_graph === 'bar') {
-          const numVisible = Object.keys(config.set_groups).length;
-          const stack_key = entityConfig.stack
-            ? `${entityConfig.stack}_${entityConfig.set_y_axis}`
-            : `standalone_${entityConfig.index}`;
-          graphPos = config.set_groups[stack_key];
-          this.bar[i] = this.Graph[i]
-            .getBars(graphPos, numVisible, entityConfig.set_bar_spacing, config.bar_spacing_group);
-          graphPos += 1;
+          this.bar[i] = this.Graph[i].getBars();
         } else {
           const line = this.Graph[i].getPath();
           if (entityConfig.show_line !== false) this.line[i] = line;
