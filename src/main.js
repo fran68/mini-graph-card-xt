@@ -136,7 +136,15 @@ class MiniGraphCard extends LitElement {
     if (!this.Graph || entitiesChanged) {
       if (this._hass) this.hass = this._hass;
 
-      const visibleLines = this.visibleEntitiesLines || []; // /wo static value lines
+      // Cache for getters
+      this._visibleEntities = null;
+      this._realEntities = null;
+      this._realEntitiesLines = null;
+      this._primaryYaxisEntities = null;
+      this._secondaryYaxisEntities = null;
+
+      // Determine line width
+      const visibleLines = this.realEntitiesLines || []; // /wo static value lines
       const hasLines = visibleLines.length > 0;
       this.line_width = getMinMaxNumber(visibleLines, 'set_line_width', DEFAULT_LINE_WIDTH);
       const defaultX = hasLines ? (this.config.show.fill ? 0 : this.line_width.max) : 0;
@@ -963,32 +971,53 @@ class MiniGraphCard extends LitElement {
   }
 
   get visibleEntities() {
-    // 1. Filter only real, visible entities (excluding static lines and hidden graphs)
-    const realVisible = this.config.entities.filter(
-      entity => entity.show_graph !== false
-      && (entity.static_value === undefined || entity.static_value === null),
-    );
-
-    // 2. If real entities exist, return them as the preferred selection
-    if (realVisible.length > 0) {
-      return realVisible;
-    }
-
-    // 3. Fallback: If NO real entities are visible, include static lines
-    // to ensure the chart can calculate valid bounds and prevent a crash.
-    return this.config.entities.filter(entity => entity.show_graph !== false);
+    if (this._visibleEntities === null)
+      this._visibleEntities = this.config.entities.filter(entity => entity.show_graph !== false);
+    return this._visibleEntities;
   }
 
-  get visibleEntitiesLines() {
-    return this.visibleEntities.filter(entity => entity.set_graph === 'line');
+  get realEntities() {
+    if (this._realEntities === null)
+      this._realEntities = this.visibleEntities.filter(
+        entity => entity.static_value === undefined || entity.static_value === null,
+      );
+    return this._realEntities;
+  }
+
+  get realEntitiesLines() {
+    if (this._realEntitiesLines === null)
+      this._realEntitiesLines = this.realEntities.filter(entity => entity.set_graph === 'line');
+    return this._realEntitiesLines;
   }
 
   get primaryYaxisEntities() {
-    return this.visibleEntities.filter(entity => entity.set_y_axis === 'primary');
+    if (this._primaryYaxisEntities === null) {
+      this._primaryYaxisEntities = this.realEntities.filter(
+        entity => entity.set_y_axis === 'primary',
+      );
+
+      if (this._primaryYaxisEntities.length === 0) {
+        this._primaryYaxisEntities = this.visibleEntities.filter(
+          entity => entity.set_y_axis === 'primary',
+        );
+      }
+    }
+    return this._primaryYaxisEntities;
   }
 
   get secondaryYaxisEntities() {
-    return this.visibleEntities.filter(entity => entity.set_y_axis === 'secondary');
+    if (this._secondaryYaxisEntities === null) {
+      this._secondaryYaxisEntities = this.realEntities.filter(
+        entity => entity.set_y_axis === 'secondary',
+      );
+
+      if (this._secondaryYaxisEntities.length === 0) {
+        this._secondaryYaxisEntities = this.visibleEntities.filter(
+          entity => entity.set_y_axis === 'secondary',
+        );
+      }
+    }
+    return this._secondaryYaxisEntities;
   }
 
   get visibleLegends() {
