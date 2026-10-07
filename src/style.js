@@ -273,6 +273,9 @@ const style = css`
     opacity: 1;
     animation: reveal-line 1s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
   }
+  .line-revealer[anim="true"] {
+    opacity: 0;
+  }
   .line--points[inactive],
   .line--rect[inactive],
   .fill--rect[inactive] {
@@ -332,6 +335,9 @@ const style = css`
   }
   .line[anim="true"][init] {
     animation: dash 1s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+  }
+  .line[anim="true"] {
+    opacity: 1;
   }
   .graph__labels.--secondary {
     right: 0;

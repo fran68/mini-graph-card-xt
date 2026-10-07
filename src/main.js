@@ -667,33 +667,38 @@ class MiniGraphCard extends LitElement {
     if (!line) return;
 
     const entityConfig = this.config.entities[index];
-    const lengthVal = this.length[index];
     const lineWidth = entityConfig.set_line_width;
 
     const input = entityConfig.set_line_style || 'solid';
     const lineStyle = LINE_STYLES[input] || input.trim();
 
     const animate = !!this.config.animate;
-    const animationDelay = animate ? `${index * 0.5}s` : '0s';
-    const hasLength = !!lengthVal;
+    const length = this.length[index];
+    const hasLength = typeof length === 'number' && length > 0;
+    const animationDelay = animate && hasLength ? `${index * 0.5}s` : '0s';
+    const negativeLength = hasLength ? (length * -1) : 'none';
 
     // Main path is triggered when animation is active AND the line style is 'none' (solid)
-    const isNoneAnimation = animate && lineStyle === 'none';
+    const isSolidAnimation = animate && lineStyle === 'none';
 
     // A revealer mask is used when animation is active AND the line style is NOT 'none' (solid)
     const useReveal = animate && lineStyle !== 'none';
 
     // Use the path length if animation is active and lineStyle is 'none'. Otherwise, use lineStyle.
-    const strokeDasharray = isNoneAnimation
-      ? `${lengthVal || 'none'}`
+    const strokeDasharray = isSolidAnimation
+      ? `${length || 'none'}`
       : `${lineStyle}`;
 
-    const strokeDashoffset = isNoneAnimation
-      ? `${lengthVal || 'none'}`
+    const strokeDashoffset = isSolidAnimation
+      ? `${length || 'none'}`
       : '';
 
+    // Fade-in animation by using path length, clearing the length in updated() once all
+    // entities have been calculated and drawn to prevent unwanted subsequent animations
     // Init trigger for the .line[anim="true"][init] animation in CSS
-    const mainInit = isNoneAnimation && hasLength;
+    const mainInit = isSolidAnimation && hasLength;
+    // Init trigger for the .line-revealer[anim="true"][init] animation in CSS
+    const revealInit = useReveal && hasLength;
 
     /* eslint-disable indent */
     return svg`
@@ -702,9 +707,9 @@ class MiniGraphCard extends LitElement {
         <path
           class='line'
           .id=${index}
-          anim=${isNoneAnimation}
+          anim=${isSolidAnimation}
           ?init=${mainInit}
-          style=${animate ? `animation-delay: ${animationDelay};` : ''}
+          style=${isSolidAnimation ? `animation-delay: ${animationDelay};` : ''}
           fill='none'
           stroke-dasharray=${strokeDasharray}
           stroke-dashoffset=${strokeDashoffset}
@@ -718,13 +723,13 @@ class MiniGraphCard extends LitElement {
           <path
             class='line-revealer'
             anim='true'
-            ?init=${hasLength}
+            ?init=${revealInit}
             style="
               animation-delay: ${animationDelay};
-              --stroke-dashoffset: ${lengthVal * -1 || 'none'};
+              --stroke-dashoffset: ${negativeLength};
             "
             fill='none'
-            stroke-dasharray=${lengthVal || 'none'}
+            stroke-dasharray=${length || 'none'}
             stroke='black'
             stroke-width=${lineWidth + 4}
             d=${this.line[index]}
