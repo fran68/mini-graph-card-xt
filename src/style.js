@@ -354,7 +354,8 @@ const style = css`
     padding: .6em;
     position: absolute;
     pointer-events: none;
-    top: 0; bottom: 0;
+    top: 0;
+    bottom: var(--bottom-percent, 0%);
     opacity: .75;
   }
   .graph__labels > span {

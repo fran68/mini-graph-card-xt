@@ -423,10 +423,15 @@ class MiniGraphCard extends LitElement {
       && this.config.entities[index].show_graph !== false,
     ))
     || this.config.show.loading_indicator === false;
+
+    const bottomPercent = (this.config.show.x_labels && this.config.show.x_labels_inline)
+      ? (20 / this.config.height) * 100
+      : (X_LABELS_HEIGHT / (this.config.height + X_LABELS_HEIGHT)) * 100;
+
     return this.config.show.graph ? html`
       <div class="graph">
         ${ready ? html`
-            <div class="graph__container">
+            <div class="graph__container" style="--bottom-percent: ${bottomPercent}%;">
               ${this.renderLabels()}
               ${this.renderLabelsSecondary()}
               <div class="graph__container__svg">
@@ -942,7 +947,7 @@ class MiniGraphCard extends LitElement {
     return html`
       <div class="graph__labels --primary flex">
         <span class="label--max">${this.computeState(this.bound[1])}</span>
-        <span class="label--min" style=${this.config.show.x_labels ? 'transform: translateY(-100%);' : ''}>${this.computeState(this.bound[0])}</span>
+        <span class="label--min">${this.computeState(this.bound[0])}</span>
       </div>
     `;
   }
@@ -952,7 +957,7 @@ class MiniGraphCard extends LitElement {
     return html`
       <div class="graph__labels --secondary flex">
         <span class="label--max">${this.computeState(this.boundSecondary[1])}</span>
-        <span class="label--min" style=${this.config.show.x_labels ? 'transform: translateY(-100%);' : ''}>${this.computeState(this.boundSecondary[0])}</span>
+        <span class="label--min">${this.computeState(this.boundSecondary[0])}</span>
       </div>
     `;
   }
