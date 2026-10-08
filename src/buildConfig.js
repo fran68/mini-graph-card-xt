@@ -197,9 +197,13 @@ export default (config) => {
         },
       });
     entityConf.set_baseline = normalizeEntity('baseline', 'number', DEFAULT_BASELINE, { stringArr: ['top', 'bottom'] });
+    entityConf.priority = normalizeEntity('priority', 'number', undefined, { number: { min: -100, max: 100 }, parentConfig: '' });
 
     return entityConf;
   });
+
+  const normalize = createNormalizer(conf, '', '', '', conf.debug);
+  conf.render_priority = normalize('render_priority', undefined, undefined, { stringArr: ['reverse', 'custom'] });
 
   if (typeof cleanConfig.line_color === 'string')
     conf.line_color = [cleanConfig.line_color, ...DEFAULT_COLORS];

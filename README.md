@@ -13,14 +13,15 @@
 >
 > ### xt-0.6.x (2026-XX-XX)
 >
-> * Add [styles](#line-styling) for lines
+> * Add custom rendering [priority](#render-priority-of-graphs)
 > * Add baseline configuration options, see [baseline](#baseline--reference-lines)
+> * Add [styles](#line-styling) for lines
 > * Update bar animation logic, make it baseline aware, implement [staggered waterfall effect](#bar-animate-horizontal)
 >
 > ### xt-0.5.x (2026-08-05)
 >
 > * Add [adaptive ambient style](#adaptive-ambient-style) for bars
-> * Render graphs in the [order](#render-order-of-graphs) the entities are listed in YAML config
+> * Render graphs in the [order](#render-priority-of-graphs) the entities are defined in the configuration
 >
 > ### xt-0.4.x (2026-08-04)
 >
@@ -201,6 +202,7 @@ We recommend looking at the [Example usage section](#example-usage) to understan
 | logarithmic | boolean | `false` | v0.10.0 | Use a Logarithmic scale for the graph
 | margin_x | number |  | NEXT_VERSION | Set custom X-axis margin (in pixels). Overrides the auto-calculated horizontal padding.
 | margin_y | number |  | NEXT_VERSION | Set custom Y-axis margin (in pixels). Overrides the auto-calculated vertical padding. Set to 0 to hide the minimal height offset on zero-value bars.
+| render_priority | string |  | NEXT_VERSION | Controls the [sorting order](#render-priority-of-graphs) of the graphs.
 | x_scale | number | `10` | xt-v0.2.0 | Set maximum number of X-axis labels, ticks or grid lines (marks).
 | x_major_breaks | number | `4` | xt-v0.2.0 | Display major (thick) label, tick and grid line every n-th mark.
 | x_format | list |  | xt-v0.2.0 | Set time format for X-axis.
@@ -210,33 +212,34 @@ We recommend looking at the [Example usage section](#example-usage) to understan
 Entities may be listed directly (as per `sensor.temperature` in the example below), or defined using
 properties of the Entity object detailed in the following table (as per `sensor.pressure` in the example below).
 
-| Name | Type | Default | Description |
-|------|:----:|:-------:|-------------|
-| entity ***(required)*** | string |         | Entity id of the sensor.
-| static_value | number |         | Set a static value as a virtual entity instead of entity.
-| attribute | string |         | Retrieves an attribute or [sub-attribute (attr1.attr2...)](#accessing-attributes-in-complex-structures) instead of the state
-| name | string |         | Set a custom display name, defaults to entity's friendly_name.
-| graph | string |         | Override for the graph type, `bar` or `line`.
-| bar_spacing | number |         | Override for the spacing between bars in bar graph.
+| Name | Type | Default | Since | Description |
+|------|:----:|:-------:|:-----:|-------------|
+| entity ***(required)*** | string |         |  | Entity id of the sensor.
+| static_value | number |         |  | Set a static value as a virtual entity instead of entity.
+| attribute | string |         |  | Retrieves an attribute or [sub-attribute (attr1.attr2...)](#accessing-attributes-in-complex-structures) instead of the state
+| name | string |         |  | Set a custom display name, defaults to entity's friendly_name.
+| graph | string |         |  | Override for the graph type, `bar` or `line`.
+| bar_spacing | number |         |  | Override for the spacing between bars in bar graph.
 | baseline | number |         | NEXT_VERSION | Override for the baseline / reference line.
 | line_style | string |         | NEXT_VERSION | Override for the line style.
-| line_width | number |         | Override for a thickness of the line.
-| color | string |         | Set a custom color, overrides all other color options including thresholds.
-| unit | string |         | Set a custom unit of measurement, overrides `unit` set in base config (`''` value for an empty unit).
-| aggregate_func | string |         | Override for aggregate function used to calculate point on the graph, `avg`, `median`, `min`, `max`, `first`, `last`, `sum`.
-| stack | string |         | Use with any group name to combine entities into a single stack.
-| show_state | boolean |         | Display the current state.
-| show_legend_state | boolean |  false  | Display the current state as part of the legend.
-| show_indicator | boolean |         | Display a color indicator next to the state, (only when more than two states are visible).
-| show_graph | boolean |         | Set to false to completely hide the entity in the graph.
-| show_line | boolean |         | Set to false to hide the line.
-| show_fill | boolean |         | Set to false to hide the fill.
-| show_points | boolean |         | Set to false to hide the points.
-| show_legend | boolean |         | Set to false to turn hide from the legend.
-| state_adaptive_color | boolean |         | Make the color of the state adapt to the entity color.
-| y_axis | string |         | If 'secondary', displays using the secondary y-axis on the right.
-| fixed_value | boolean |         | Set to true to graph the entity's current state as a fixed value instead of graphing its state history.
-| smoothing | boolean or string |         | Override for a flag indicating whether to make graph line smooth. Use `bezierc` to describe a line by a cubic Bezier curve.
+| line_width | number |         |  | Override for a thickness of the line.
+| color | string |         |  | Set a custom color, overrides all other color options including thresholds.
+| unit | string |         |  | Set a custom unit of measurement, overrides `unit` set in base config (`''` value for an empty unit).
+| aggregate_func | string |         |  | Override for aggregate function used to calculate point on the graph, `avg`, `median`, `min`, `max`, `first`, `last`, `sum`.
+| priority | number |   `0`   | NEXT_VERSION | The [rendering priority](#render-priority-of-graphs) for this line. Only effective when card option `render_priority` is set to `custom`. Range is between `-100` and `100`.
+| stack | string |         |  | Use with any group name to combine entities into a single stack.
+| show_state | boolean |         |  | Display the current state.
+| show_legend_state | boolean |  false  |  | Display the current state as part of the legend.
+| show_indicator | boolean |         |  | Display a color indicator next to the state, (only when more than two states are visible).
+| show_graph | boolean |         |  | Set to false to completely hide the entity in the graph.
+| show_line | boolean |         |  | Set to false to hide the line.
+| show_fill | boolean |         |  | Set to false to hide the fill.
+| show_points | boolean |         |  | Set to false to hide the points.
+| show_legend | boolean |         |  | Set to false to turn hide from the legend.
+| state_adaptive_color | boolean |         |  | Make the color of the state adapt to the entity color.
+| y_axis | string |         |  | If 'secondary', displays using the secondary y-axis on the right.
+| fixed_value | boolean |         |  | Set to true to graph the entity's current state as a fixed value instead of graphing its state history.
+| smoothing | boolean or string |         |  | Override for a flag indicating whether to make graph line smooth. Use `bezierc` to describe a line by a cubic Bezier curve.
 
 ```yaml
 entities:
@@ -250,26 +253,26 @@ entities:
 #### Available show options
 All properties are optional.
 
-| Name | Default | Options | Description |
-|------|:-------:|:-------:|-------------|
-| name | `true` | `true` / `false` | Display name.
-| icon | `true` | `true` / `false` | Display icon.
-| state | `true` | `true` / `false` / `last` | Display current state. `last` will show the last graph point's value.
-| graph | `line` | `line` / `bar` / `false` | Display option for the graph. If set to `bar` a maximum of `96` bars will be displayed.
-| fill | `true` | `true` / `false` / `fade` / `ambient` | Display the line graph fill. Use the optional value `ambient` (only valid for bars) for a theme-adaptive gradient with a right-shifted light or shadow accent.
-| points | `hover` | `true` / `false` / `hover` | Display graph data points.
-| legend | `true` | `true` / `false` | Display the graph legend (only shown when graph contains multiple entities).
-| average | `false` | `true` / `false` | Display average information.
-| extrema | `false` | `true` / `false` | Display max/min information.
-| labels | `hover` | `true` / `false` / `hover` | Display Y-axis labels.
-| labels_secondary | `hover` | `true` / `false` / `hover` | Display secondary Y-axis labels.
-| name_adaptive_color | `false` | `true` / `false` | Make the name color adapt with the primary entity color.
-| icon_adaptive_color | `false` | `true` / `false` | Make the icon color adapt with the primary entity color.
-| loading_indicator | `true` | `true` / `false` | Show loading indicator while attempting to retrieve a history.
-| x_labels | `false` | `true` / `false` | Display X-axis labels with horizontal line and ticks.
-| x_labels_inline | `false` | `true` / `false` | Display X-axis labels within the graph area. Only valid when x_labels is enabled.
-| x_labels_fill | `false` | `true` / `false` | Stretch the fill into the label area. Only valid when x_labels is enabled and labels are not inline.
-| x_lines | `false` | `true` / `false` | Display X-axis grid lines.
+| Name | Default | Options | Since | Description |
+|------|:-------:|:-------:|:-----:|-------------|
+| name | `true` | `true` / `false` |  | Display name.
+| icon | `true` | `true` / `false` |  | Display icon.
+| state | `true` | `true` / `false` / `last` |  | Display current state. `last` will show the last graph point's value.
+| graph | `line` | `line` / `bar` / `false` |  | Display option for the graph. If set to `bar` a maximum of `96` bars will be displayed.
+| fill | `true` | `true` / `false` / `fade` / `ambient` |  | Display the line graph fill. Use the optional value `ambient` (only valid for bars) for a theme-adaptive gradient with a right-shifted light or shadow accent.
+| points | `hover` | `true` / `false` / `hover` |  | Display graph data points.
+| legend | `true` | `true` / `false` |  | Display the graph legend (only shown when graph contains multiple entities).
+| average | `false` | `true` / `false` |  | Display average information.
+| extrema | `false` | `true` / `false` |  | Display max/min information.
+| labels | `hover` | `true` / `false` / `hover` |  | Display Y-axis labels.
+| labels_secondary | `hover` | `true` / `false` / `hover` |  | Display secondary Y-axis labels.
+| name_adaptive_color | `false` | `true` / `false` |  | Make the name color adapt with the primary entity color.
+| icon_adaptive_color | `false` | `true` / `false` |  | Make the icon color adapt with the primary entity color.
+| loading_indicator | `true` | `true` / `false` |  | Show loading indicator while attempting to retrieve a history.
+| x_labels | `false` | `true` / `false` |  | Display X-axis labels with horizontal line and ticks.
+| x_labels_inline | `false` | `true` / `false` |  | Display X-axis labels within the graph area. Only valid when x_labels is enabled.
+| x_labels_fill | `false` | `true` / `false` |  | Stretch the fill into the label area. Only valid when x_labels is enabled and labels are not inline.
+| x_lines | `false` | `true` / `false` |  | Display X-axis grid lines.
 
 
 #### Line color object
@@ -942,10 +945,11 @@ The `line_style` option allows you to fully customize how card lines are rendere
 - Animations: Fully supports CSS animations applied directly to the line style for dynamic visual effects.
 
 
-#### Render order of graphs
+#### Render priority of graphs
 
-Render order of graphsGraphs are rendered in the order they are listed in the YAML configuration.
-The old configuration logic drew all lines first, followed by all bars, and finally the points. This made it impossible to render lines on top of bars.
+By default, graphs are rendered in the order they are defined in the configuration, regardless of whether they are line or bar graphs. To control which lines overlap each other, you can use the custom rendering priority feature. Lines with a higher priority value are rendered last, meaning they will be drawn on top of lines with lower priority (similar to how a CSS z-index works). Set this option to `custom` to sort by entity priority, or `reverse` to invert the default order. The legend alignment automatically adapts to the selected sorting method for both new configuration options; graphs with a higher rendering order will be listed first (in descending order).
+
+Note: The old configuration logic drew all lines first, followed by all bars, and finally the points. This made it impossible to render lines on top of bars.
 
 In the example the first entity displays only its state value in the header. A baseline is drawn first as a static value, followed by an entity shown as bars, and a line overlaying both.
 

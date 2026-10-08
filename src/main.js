@@ -139,10 +139,12 @@ class MiniGraphCard extends LitElement {
 
       // Cache for getters
       this._visibleEntities = null;
+      this._visibleEntitiesSorted = null;
       this._realEntities = null;
       this._realEntitiesLines = null;
       this._primaryYaxisEntities = null;
       this._secondaryYaxisEntities = null;
+      this._visibleLegends = null;
 
       // Determine line width
       const visibleLines = this.realEntitiesLines || []; // /wo static value lines
@@ -629,7 +631,7 @@ class MiniGraphCard extends LitElement {
     `;
   }
 
-  renderSvgFill(fill, i) {
+  renderSvgFill(fill, i, renderIndex) {
     if (!fill) return;
     const fade = this.config.show.fill === 'fade';
     const init = this.length[i] || this.config.entities[i].show_line === false;
@@ -649,7 +651,7 @@ class MiniGraphCard extends LitElement {
         <path class='fill'
           type=${this.config.show.fill}
           .id=${i} anim=${this.config.animate} ?init=${init}
-          style="animation-delay: ${this.config.animate ? `${i * 0.5}s` : '0s'}"
+          style="animation-delay: ${this.config.animate ? `${renderIndex * 0.5}s` : '0s'}"
           fill='white'
           mask=${fade ? `url(#fill-grad-mask-${this.id}-${i})` : ''}
           d=${this.fill[i]}
@@ -664,7 +666,7 @@ class MiniGraphCard extends LitElement {
    * @param {number} index - The index of the current entity.
    * @returns {any} A Lit SVG template.
    */
-  renderSvgLine(line, index) {
+  renderSvgLine(line, index, renderIndex) {
     if (!line) return;
 
     const entityConfig = this.config.entities[index];
@@ -676,7 +678,7 @@ class MiniGraphCard extends LitElement {
     const animate = !!this.config.animate;
     const length = this.length[index];
     const hasLength = typeof length === 'number' && length > 0;
-    const animationDelay = animate && hasLength ? `${index * 0.5}s` : '0s';
+    const animationDelay = animate && hasLength ? `${renderIndex * 0.5}s` : '0s';
     const negativeLength = hasLength ? (length * -1) : 'none';
 
     // Main path is triggered when animation is active AND the line style is 'none' (solid)
@@ -872,16 +874,18 @@ class MiniGraphCard extends LitElement {
           <defs>
             ${this.renderSvgGradient(this.gradient)}
           </defs>
-          ${this.entity.map((_, i) => {
-            if (this.bar[i]) {
-              return this.renderSvgBars(this.bar[i], i);
+          ${this.visibleEntitiesSorted.map((entity, renderIndex) => {
+            const { index } = entity;
+            // log(`index: ${index}, renderIndex: ${renderIndex}`);
+            if (this.bar[index]) {
+              return this.renderSvgBars(this.bar[index], index);
             }
-            if (this.line[i]) {
+            if (this.line[index]) {
               return svg`
-                ${this.renderSvgFill(this.fill[i], i)}
-                ${this.renderSvgFillRect(this.fill[i], i)}
-                ${this.renderSvgLine(this.line[i], i)}
-                ${this.renderSvgLineRect(this.line[i], i)}
+                ${this.renderSvgFill(this.fill[index], index, renderIndex)}
+                ${this.renderSvgFillRect(this.fill[index], index)}
+                ${this.renderSvgLine(this.line[index], index, renderIndex)}
+                ${this.renderSvgLineRect(this.line[index], index)}
               `;
             }
             return '';
@@ -976,10 +980,36 @@ class MiniGraphCard extends LitElement {
     handleClick(this, this._hass, this.config, this.config.tap_action, entity.entity_id || entity);
   }
 
+  /**
+   * Evaluates, filters, and sorts the graph entities based on the configured rendering priority.
+   * Uses a lazy-loading cache pattern: filters and sorts the entities only once upon the first
+   * call or after a configuration reset, and returns the cached array on subsequent reads.
+   *
+   * @returns {Array} The array of entities to be rendered, ordered from background to foreground.
+   */
   get visibleEntities() {
-    if (this._visibleEntities === null)
+    if (this._visibleEntities === null) {
       this._visibleEntities = this.config.entities.filter(entity => entity.show_graph !== false);
+    }
     return this._visibleEntities;
+  }
+
+  get visibleEntitiesSorted() {
+    if (this._visibleEntitiesSorted === null) {
+      const filtered = this.visibleEntities.slice();
+      const priorityType = this.config.render_priority;
+      if (priorityType === 'custom') {
+        filtered.sort((a, b) => {
+          const priorityA = a.priority !== undefined ? a.priority : 0;
+          const priorityB = b.priority !== undefined ? b.priority : 0;
+          return priorityA - priorityB;
+        });
+      } else if (priorityType === 'reverse') {
+        filtered.reverse();
+      }
+      this._visibleEntitiesSorted = filtered;
+    }
+    return this._visibleEntitiesSorted;
   }
 
   get realEntities() {
@@ -1027,7 +1057,14 @@ class MiniGraphCard extends LitElement {
   }
 
   get visibleLegends() {
-    return this.visibleEntities.filter(entity => entity.show_legend !== false);
+    if (this._visibleLegends === null) {
+      const isCustom = this.config.render_priority === 'custom';
+      const selected = isCustom ? this.visibleEntitiesSorted : this.visibleEntities;
+
+      const filtered = selected.filter(entity => entity.show_legend !== false);
+      this._visibleLegends = isCustom ? filtered.reverse() : filtered;
+    }
+    return this._visibleLegends;
   }
 
   get primaryYaxisSeries() {
