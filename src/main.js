@@ -67,15 +67,15 @@ class MiniGraphCard extends LitElement {
     this._hass = hass;
     let updated = false;
     const queue = [];
-    this.config.entities.forEach((entity, index) => {
-      this.config.entities[index].index = index; // Required for filtered views
 
+    if (!this.entity) this.entity = [];
+    this.config.entities.forEach((entity, index) => {
       // Handle static value lines
       if (typeof entity.static_value === 'number') {
         if (!this.entity[index]) {
           this.entity[index] = {
             // Fallback to a safe unique name if entity is completely omitted in YAML
-            entity_id: entity.entity || `sensor.virtual_static_value_${index}`,
+            entity_id: entity.entity,
             state: entity.static_value.toString(),
             attributes: { friendly_name: entity.name || `Static value ${index}` },
           };
@@ -92,6 +92,7 @@ class MiniGraphCard extends LitElement {
         updated = true;
       }
     });
+
     if (updated) {
       this.stateChanged = true;
       this.entity = [...this.entity];

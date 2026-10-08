@@ -1,8 +1,14 @@
-import { getFirstDefinedItem } from './utils';
+import {
+  normalizeItem,
+} from './utils';
 import {
   URL_DOCS,
   FONT_SIZE,
   FONT_SIZE_HEADER,
+  DEFAULT_LINE_WIDTH,
+  DEFAULT_LINE_STYLE,
+  DEFAULT_BASELINE,
+  DEFAULT_BAR_SPACING,
   DEFAULT_BAR_ANIMATE_HORIZONTAL,
   DEFAULT_COLORS,
   DEFAULT_SHOW,
@@ -101,6 +107,19 @@ const computeThresholds = (stops, type) => {
   }
 };
 
+// Wrapper
+/* eslint-disable implicit-arrow-linebreak */
+const createNormalizer = (config, parentConfig, contextName, parentLevelName = '', debug) =>
+  (item, type, defaultVal, specificOptions = {}) =>
+    normalizeItem(config, item, type, defaultVal, {
+      parentConfig,
+      debug,
+      contextName,
+      parentLevelName,
+      ...specificOptions,
+    });
+/* eslint-enable implicit-arrow-linebreak */
+
 export default (config) => {
   if (!Array.isArray(config.entities))
     throw new Error(`Please provide the "entities" option as a list.\n See ${URL_DOCS}`);
@@ -126,12 +145,8 @@ export default (config) => {
     line_color: [...DEFAULT_COLORS],
     color_thresholds: [],
     color_thresholds_transition: 'smooth',
-    line_width: 5,
-    line_style: 'solid',
-    bar_spacing: 4,
     bar_spacing_group: 0,
     bar_animate_horizontal: DEFAULT_BAR_ANIMATE_HORIZONTAL,
-    baseline: 0,
     compress: true,
     smoothing: true,
     state_map: [],
@@ -141,31 +156,56 @@ export default (config) => {
       action: 'more-info',
     },
     ...cleanConfig,
-    show: { ...DEFAULT_SHOW, ...config.show },
+    show: { ...DEFAULT_SHOW, ...cleanConfig.show },
   };
 
-  conf.entities.forEach((entity, i) => {
-    if (typeof entity === 'string') conf.entities[i] = { entity };
-    conf.entities[i].set_graph = entity.graph || conf.show.graph;
-    conf.entities[i].set_y_axis = entity.y_axis || 'primary';
-    conf.entities[i].set_bar_spacing = entity.bar_spacing || conf.bar_spacing;
-    conf.entities[i].set_line_width = entity.line_width || conf.line_width;
-    conf.entities[i].set_line_style = entity.line_style || conf.line_style;
-    conf.entities[i].set_baseline = getFirstDefinedItem(entity.baseline,
-      conf[`${conf.entities[i].set_graph}_baseline`], conf.baseline);
+  const lineStyleRegex = /^(none|\d+(\.\d+)?([\s,]+\d+(\.\d+)?)*)$/;
+  conf.debug = normalizeItem(conf, 'debug', 'boolean', false);
+
+  conf.entities = conf.entities.map((entity, index) => {
+    const entityConf = typeof entity === 'string' ? { entity } : { ...entity };
+
+    entityConf.index = index;
+
+    if (typeof entityConf.static_value === 'number') {
+      // Fallback generation if YAML contains no real entity ID
+      if (!entityConf.entity)
+        entityConf.entity = `sensor.virtual_static_value_${entityConf.static_value}_${index}`;
+    }
+
+    let contextName;
+    if (conf.debug) {
+      const logName = entityConf.name || entityConf.entity;
+      contextName = `Entity (${index + 1}) '${logName}'`;
+    }
+
+    // Initialize the normalize functions
+    const normalizeEntity = createNormalizer(entityConf, conf, contextName, '', conf.debug);
+    const normalizeEntityShow = createNormalizer(entityConf, conf.show, contextName, 'show', conf.debug);
+
+    // Normalize specific configuration options against options at global or other level
+    // and set option unconditionally as an entity option
+    entityConf.set_graph = normalizeEntityShow('graph', undefined, DEFAULT_SHOW.graph, { stringArr: ['line', 'bar'] });
+    entityConf.set_y_axis = normalizeEntity('y_axis', undefined, 'primary', { stringArr: ['primary', 'secondary'], parentConfig: '' });
+    entityConf.set_line_width = normalizeEntity('line_width', 'number', DEFAULT_LINE_WIDTH, { number: { min: 0 } });
+    entityConf.set_bar_spacing = normalizeEntity('bar_spacing', 'number', DEFAULT_BAR_SPACING, { number: { min: 0 } });
+    entityConf.set_line_style = normalizeEntity('line_style', 'string', DEFAULT_LINE_STYLE,
+      {
+        stringArr: ['solid', 'dotted', 'dashed', 'dashdot'],
+        string: {
+          regex: lineStyleRegex,
+        },
+      });
+    entityConf.set_baseline = normalizeEntity('baseline', 'number', DEFAULT_BASELINE, { stringArr: ['top', 'bottom'] });
+
+    return entityConf;
   });
 
-  conf.state_map.forEach((state, i) => {
-    // convert string values to objects
-    if (typeof state === 'string') conf.state_map[i] = { value: state, label: state };
-    // make sure label is set
-    conf.state_map[i].label = conf.state_map[i].label || conf.state_map[i].value;
-  });
+  if (typeof cleanConfig.line_color === 'string')
+    conf.line_color = [cleanConfig.line_color, ...DEFAULT_COLORS];
 
-  if (typeof config.line_color === 'string')
-    conf.line_color = [config.line_color, ...DEFAULT_COLORS];
+  conf.font_size = (cleanConfig.font_size / 100) * FONT_SIZE || FONT_SIZE;
 
-  conf.font_size = (config.font_size / 100) * FONT_SIZE || FONT_SIZE;
   conf.color_thresholds = computeThresholds(
     conf.color_thresholds,
     conf.color_thresholds_transition,
