@@ -3,6 +3,7 @@ import {
   X, Y, V,
   ONE_HOUR,
 } from './const';
+// import { log } from './utils';
 
 export default class Graph {
   constructor(
@@ -222,6 +223,11 @@ export default class Graph {
     });
 
     return coords2;
+  }
+
+  getCoordY(coordV) {
+    const [[, calculatedY]] = this._calcY([[0, 0, coordV]]);
+    return calculatedY;
   }
 
   getPoints() {

@@ -186,7 +186,7 @@ export default (config) => {
     // Normalize specific configuration options against options at global or other level
     // and set option unconditionally as an entity option
     entityConf.set_graph = normalizeEntityShow('graph', undefined, DEFAULT_SHOW.graph, { stringArr: ['line', 'bar'] });
-    entityConf.set_y_axis = normalizeEntity('y_axis', undefined, 'primary', { stringArr: ['primary', 'secondary'], parentConfig: '' });
+    entityConf.set_y_axis = normalizeEntity('y_axis', undefined, 'primary', { stringArr: ['primary', 'secondary'] });
     entityConf.set_line_width = normalizeEntity('line_width', 'number', DEFAULT_LINE_WIDTH, { number: { min: 0 } });
     entityConf.set_bar_spacing = normalizeEntity('bar_spacing', 'number', DEFAULT_BAR_SPACING, { number: { min: 0 } });
     entityConf.set_line_style = normalizeEntity('line_style', 'string', DEFAULT_LINE_STYLE,
@@ -197,7 +197,11 @@ export default (config) => {
         },
       });
     entityConf.set_baseline = normalizeEntity('baseline', 'number', DEFAULT_BASELINE, { stringArr: ['top', 'bottom'] });
-    entityConf.priority = normalizeEntity('priority', 'number', undefined, { number: { min: -100, max: 100 }, parentConfig: '' });
+    entityConf.priority = normalizeEntity('priority', 'number', undefined, { number: { min: -100, max: 100 } });
+    entityConf.show_label = normalizeEntity('show_label', 'boolean', false);
+    entityConf.align_label = normalizeEntity('align_label', 'number', undefined, { number: { min: -1, max: 101 } });
+    entityConf.label_adaptive_color = normalizeEntity('label_adaptive_color', 'boolean', false);
+    entityConf.scale_mode = normalizeEntity('scale_mode', undefined, 'clip', { stringArr: ['clip', 'fit'] });
 
     return entityConf;
   });

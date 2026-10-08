@@ -57,6 +57,7 @@ class MiniGraphCard extends LitElement {
     this.stateChanged = false;
     this.initial = true;
     this._cacheKey = undefined;
+    this._hiddenSeries = new Set();
   }
 
   static get styles() {
@@ -424,16 +425,16 @@ class MiniGraphCard extends LitElement {
     ))
     || this.config.show.loading_indicator === false;
 
-    const bottomPercent = (this.config.show.x_labels && this.config.show.x_labels_inline)
-      ? (20 / this.config.height) * 100
-      : (X_LABELS_HEIGHT / (this.config.height + X_LABELS_HEIGHT)) * 100;
+    const bottomPercent = this.xLabelsHeight
+      ? (X_LABELS_HEIGHT / (this.config.height + X_LABELS_HEIGHT)) * 100
+      : 0;
 
     return this.config.show.graph ? html`
       <div class="graph">
         ${ready ? html`
             <div class="graph__container" style="--bottom-percent: ${bottomPercent}%;">
-              ${this.renderLabels()}
-              ${this.renderLabelsSecondary()}
+              ${this.renderLabels('primary')}
+              ${this.renderLabels('secondary')}
               <div class="graph__container__svg">
                 ${this.renderSvg()}
               </div>
@@ -862,7 +863,6 @@ class MiniGraphCard extends LitElement {
       <g
         class='bars'
         ?anim=${this.config.animate}
-        ?inactive=${this.tooltip.entity !== undefined && this.tooltip.entity !== index}
       >${items}</g>`;
   }
 
@@ -881,7 +881,9 @@ class MiniGraphCard extends LitElement {
           </defs>
           ${this.visibleEntitiesSorted.map((entity, renderIndex) => {
             const { index } = entity;
-            // log(`index: ${index}, renderIndex: ${renderIndex}`);
+            if (this._hiddenSeries.has(index)) {
+              return '';
+            }
             if (this.bar[index]) {
               return this.renderSvgBars(this.bar[index], index);
             }
@@ -942,23 +944,89 @@ class MiniGraphCard extends LitElement {
     };
   }
 
-  renderLabels() {
-    if (!this.config.show.labels || this.primaryYaxisSeries.length === 0) return;
+  /**
+   * Renders the Y-axis labels container, including min, max, and custom entity labels.
+   *
+   * @param {string} [axis_type='primary'] - The type of the Y-axis ('primary' or 'secondary').
+   * @returns {any} A Lit HTML template or undefined if labels are disabled or series are empty.
+   */
+  renderLabels(axis_type = 'primary') {
+    const isPrimary = axis_type === 'primary';
+
+    const showLabels = isPrimary ? this.config.show.labels : this.config.show.labels_secondary;
+    const series = isPrimary ? this.primaryYaxisSeries : this.secondaryYaxisSeries;
+    const bounds = isPrimary ? this.bound : this.boundSecondary;
+
+    if (!showLabels || series.length === 0) return;
+
+    const inlineBottomPercent = (this.config.show.x_labels && this.config.show.x_labels_inline)
+      ? (20 / this.config.height) * 100
+      : 0;
+
     return html`
-      <div class="graph__labels --primary flex">
-        <span class="label--max">${this.computeState(this.bound[1])}</span>
-        <span class="label--min">${this.computeState(this.bound[0])}</span>
+      <div class="graph__labels --${axis_type} flex">
+        <span class="label--max">
+          ${this.computeState(bounds[1])}
+        </span>
+        
+        ${this.renderLabelsCustom(axis_type)}
+        
+        <span class="label--min" style="--inline-bottom-percent: ${inlineBottomPercent}%;">
+          ${this.computeState(bounds[0])}
+        </span>
       </div>
     `;
   }
 
-  renderLabelsSecondary() {
-    if (!this.config.show.labels_secondary || this.secondaryYaxisSeries.length === 0) return;
+  /**
+   * Renders custom dynamic labels for visible entities assigned to the specified Y-axis.
+   * Calculates safe boundaries and adaptive positioning for each label.
+   *
+   * @param {string} [axis_type='primary'] - Type of the Y-axis to filter and align the labels for.
+   * @returns {any} A Lit HTML template containing the custom labels.
+   */
+  renderLabelsCustom(axis_type = 'primary') {
+    const labelEntities = this.visibleEntities.filter(entityConfig => entityConfig.show_label
+      && entityConfig.set_y_axis === axis_type);
+
+    const customLabels = labelEntities.map((entityConfig) => {
+      const { index } = entityConfig;
+
+      const val = this.getEntityState(index);
+      const pixelTop = this.Graph[index].getCoordY(val);
+
+      if (this._hiddenSeries.has(index)) return null;
+
+      const defaultLeftPercent = axis_type === 'primary' ? 0 : 100;
+      const leftPercent = entityConfig.align_label !== undefined
+        ? entityConfig.align_label
+        : defaultLeftPercent;
+
+      const safeDistance = (leftPercent < 13 || leftPercent > 87) ? 50 : 13;
+      const safeTop = Math.min(Math.max(pixelTop, safeDistance), this.config.height - safeDistance);
+
+      const safeTopPercent = (safeTop / this.config.height) * 100;
+      const color = entityConfig.label_adaptive_color ? this.computeColor(val, index) : '';
+
+      return {
+        value: this.computeState(val),
+        top: safeTopPercent,
+        left: leftPercent,
+        color,
+      };
+    }).filter(label => label !== null);
+
     return html`
-      <div class="graph__labels --secondary flex">
-        <span class="label--max">${this.computeState(this.boundSecondary[1])}</span>
-        <span class="label--min">${this.computeState(this.boundSecondary[0])}</span>
-      </div>
+      ${customLabels.map(label => html`
+        <span class="label__custom"
+          style="
+            --custom-label-top: ${label.top}%;
+            --custom-label-left: ${label.left}%;
+            --custom-label-color: ${label.color};
+          ">
+          ${label.value}
+        </span>
+      `)}
     `;
   }
 
@@ -1019,9 +1087,13 @@ class MiniGraphCard extends LitElement {
 
   get realEntities() {
     if (this._realEntities === null)
-      this._realEntities = this.visibleEntities.filter(
-        entity => entity.static_value === undefined || entity.static_value === null,
-      );
+      this._realEntities = this.visibleEntities.filter((entity) => {
+        const isStatic = typeof entity.static_value === 'number';
+
+        if (!isStatic) return true;
+
+        return entity.scale_mode === 'fit';
+      });
     return this._realEntities;
   }
 
@@ -1210,6 +1282,7 @@ class MiniGraphCard extends LitElement {
     }
 
     this.updateBounds();
+    this._hiddenSeries.clear();
 
     if (config.show.graph) {
       this.entity.forEach((entity, i) => {
@@ -1217,6 +1290,14 @@ class MiniGraphCard extends LitElement {
         const entityConfig = config.entities[i];
         const bound = entityConfig.y_axis === 'secondary' ? this.boundSecondary : this.bound;
         [this.Graph[i].min, this.Graph[i].max] = [bound[0], bound[1]];
+
+        // Helper to prevent static_value entities from being rendered
+        const value = entityConfig.static_value;
+        const isOutOfBound = typeof value === 'number' && (value <= bound[0] || value >= bound[1]);
+        if (entityConfig.scale_mode !== 'fit' && isOutOfBound) {
+          this._hiddenSeries.add(entityConfig.index);
+        }
+
         if (entityConfig.set_graph === 'bar') {
           this.bar[i] = this.Graph[i].getBars();
         } else {

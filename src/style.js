@@ -340,8 +340,6 @@ const style = css`
     opacity: 1;
   }
   .graph__labels.--secondary {
-    right: 0;
-    margin-right: 0px;
     align-items: flex-end;
   }
   .graph__labels {
@@ -350,9 +348,10 @@ const style = css`
     font-size: calc(.15em + 8.5px);
     font-weight: 400;
     justify-content: space-between;
-    margin-right: 10px;
-    padding: .6em;
+    padding: .6em 0;
     position: absolute;
+    left: 0.6em !important;
+    right: 0.6em !important;
     pointer-events: none;
     top: 0;
     bottom: var(--bottom-percent, 0%);
@@ -364,6 +363,18 @@ const style = css`
     border-radius: 1em;
     padding: .2em .6em;
     box-shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.24);
+  }
+  .graph__labels > .label--min {
+    position: absolute;
+    bottom: calc(var(--inline-bottom-percent, 0%) + 0.6em);
+  }
+  .label__custom {
+    position: absolute;
+    top: var(--custom-label-top);
+    left: var(--custom-label-left, 0%);
+    transform: translateY(-50%);
+    transform: translate(calc(-1 * var(--custom-label-left, 0%)), -50%);
+    color: var(--custom-label-color, var(--secondary-text-color));
   }
   .graph__legend {
     display: flex;

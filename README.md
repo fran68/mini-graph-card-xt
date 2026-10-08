@@ -17,6 +17,7 @@
 > * Add baseline configuration options, see [baseline](#baseline--reference-lines)
 > * Add [styles](#line-styling) for lines
 > * Update bar animation logic, make it baseline aware, implement [staggered waterfall effect](#bar-animate-horizontal)
+> * Add [custom labeling](#show-label) and [scale modes](#scale-mode)
 >
 > ### xt-0.5.x (2026-08-05)
 >
@@ -240,6 +241,10 @@ properties of the Entity object detailed in the following table (as per `sensor.
 | y_axis | string |         |  | If 'secondary', displays using the secondary y-axis on the right.
 | fixed_value | boolean |         |  | Set to true to graph the entity's current state as a fixed value instead of graphing its state history.
 | smoothing | boolean or string |         |  | Override for a flag indicating whether to make graph line smooth. Use `bezierc` to describe a line by a cubic Bezier curve.
+| <a id="show-label">show_label</a> | boolean | `false` | NEXT_VERSION | Display a persistent floating label showing the current state of this specific entity on the graph, see [Custom Labeling](#custom-labeling--scaling-modes).
+| align_label | number | `0` (primary)<br>`100` (secondary) | NEXT_VERSION | Horizontal position of the custom label in percent (`0` for far left, `100` for far right). Labels maintain a safe visual margin from the edges, minimum and maximum labels.
+| label_adaptive_color | boolean | `false` | NEXT_VERSION | When enabled, the custom label's text color dynamically changes to match the current color state of the entity.
+| <a id="scale-mode">scale_mode</a> | string | `clip` | NEXT_VERSION | Controls how this entity affects the Y-axis auto-scaling boundaries. Especially useful for static thresholds, see [Scaling Modes](#custom-labeling--scaling-modes).<br>• `clip`: The entity is ignored during bounds calculation and will be visually clipped/hidden if outside the active data view.<br>• `fit`: Forces the Y-axis to expand so that this entity is guaranteed to be fully visible.<br>• `strict`: *Reserved for future implementation.*
 
 ```yaml
 entities:
@@ -965,6 +970,38 @@ Since lines and bars can now be drawn simultaneously, the padding behavior has b
 - Mixed (Lines & Bars): Margins follow the `line_width` to keep the bars aligned perfectly with the lines.
 
 The margin implementation extends the graph area for lines and bars by the margin. For bars this causes a small bar stub to appear even when a sensor value is exactly 0. To fix this, the new configuration option `margin_y` is introduced. Setting `margin_y: 0` removes this artificial extension for bar graphs completely (forcing an exact zero-baseline) for signed bars (only positive or negative values), with the acknowledged trade-off that regular lines might get slightly clipped at the top/bottom boundaries if both types are combined. Furthermore, an override also for the X-margin is possible.
+
+
+#### Custom Labeling & Scaling Modes
+
+This update introduces advanced custom label position control, adaptive colors, and smart axis scaling constraints for chart entities. This gives users full control over how threshold lines, static limits, and individual sensor value labels are displayed and how they impact the chart's overall Y-axis boundaries.
+
+- Dynamic Custom Labels (`show_label`): Individual labels can now be activated per entity and precisely positioned horizontally on the X-axis (`align_label`: `0%` to `100%`).
+- Adaptive Color Sync (`label_adaptive_color`): Labels can automatically inherit the dynamic state color of their respective entity, providing visual cohesion with line thresholds.
+- Smart Scaling Policies (`scale_mode`): Resolves the common issue where static helper lines or threshold constants forcefully compress or distort the chart view. Users can now choose whether a line should expand the axis view (`fit`) or run quietly in the background without altering the main data scale (`clip`).
+
+##### Example:
+
+```yaml
+type: custom:mini-graph-card-xt
+title: Server Room Climate
+entities:
+  - entity: sensor.server_room_temperature
+    name: Live Temperature
+  - static_value: 26
+    name: High Warning Limit
+    show_label: true
+    align_label: 90                # Positioned near the right edge
+    label_adaptive_color: true     # Label turns red/orange with the threshold
+    scale_mode: clip               # Graph focuses on live data; line hides if room is cold
+  - static_value: 15
+    name: Minimum Safe Limit
+    show_label: true
+    align_label: 10                # Positioned near the left edge
+    scale_mode: fit                # Graph always stays zoomed out enough to show this baseline
+```
+
+
 
 
 ## Development
