@@ -254,7 +254,7 @@ class MiniGraphCard extends LitElement {
   }
 
   updated(changedProperties) {
-    if (this.config.animate && changedProperties.has('line')) {
+    if (this.config.entities.some(entityConfig => entityConfig.animate === true) && changedProperties.has('line')) {
       if (this.length.length < this.entity.length) {
         this.shadowRoot.querySelectorAll('svg path.line').forEach((ele) => {
           this.length[ele.id] = ele.getTotalLength();
@@ -637,30 +637,46 @@ class MiniGraphCard extends LitElement {
     `;
   }
 
-  renderSvgFill(fill, i, renderIndex) {
+  /**
+   * Renders the SVG fill mask and linear gradient definitions for a graph entity.
+   * Handles animation delays, fading gradients, and base offsets.
+   *
+   * @param {any} fill - The fill configuration or data object.
+   * @param {number} index - The index of the current entity.
+   * @param {number} renderIndex - The execution/render index used for staggered animation timing.
+   * @returns {any} A Lit SVG template or undefined.
+   */
+  renderSvgFill(fill, index, renderIndex) {
     if (!fill) return;
+
+    const { animate, show_line } = this.config.entities[index];
     const fade = this.config.show.fill === 'fade';
-    const init = this.length[i] || this.config.entities[i].show_line === false;
-    const { baselineRatio: offset } = this.Graph[i];
+
+    const length = this.length[index];
+    const hasLength = typeof length === 'number' && length > 0;
+    const animationDelay = animate && hasLength ? `${renderIndex * 0.5}s` : '0s';
+    const init = this.length[index] || show_line === false;
+
+    const { baselineRatio: offset } = this.Graph[index];
     return svg`
       <defs>
-        <linearGradient id=${`fill-grad-${this.id}-${i}`} x1="0%" y1="0%" x2="0%" y2="100%">
+        <linearGradient id=${`fill-grad-${this.id}-${index}`} x1="0%" y1="0%" x2="0%" y2="100%">
           <stop stop-color='white' offset='0%' stop-opacity='1'/>
           <stop stop-color='white' offset='${offset * 100}%' stop-opacity='.15'/>
           <stop stop-color='white' offset='100%' stop-opacity='1'/>
         </linearGradient>
-        <mask id=${`fill-grad-mask-${this.id}-${i}`}>
-          <rect width="100%" height="100%" fill=${`url(#fill-grad-${this.id}-${i})`} />
+        <mask id=${`fill-grad-mask-${this.id}-${index}`}>
+          <rect width="100%" height="100%" fill=${`url(#fill-grad-${this.id}-${index})`} />
         </mask>
       </defs>
-      <mask id=${`fill-${this.id}-${i}`}>
+      <mask id=${`fill-${this.id}-${index}`}>
         <path class='fill'
           type=${this.config.show.fill}
-          .id=${i} anim=${this.config.animate} ?init=${init}
-          style="animation-delay: ${this.config.animate ? `${renderIndex * 0.5}s` : '0s'}"
+          .id=${index} anim=${animate} ?init=${init}
+          style="animation-delay: ${animationDelay}"
           fill='white'
-          mask=${fade ? `url(#fill-grad-mask-${this.id}-${i})` : ''}
-          d=${this.fill[i]}
+          mask=${fade ? `url(#fill-grad-mask-${this.id}-${index})` : ''}
+          d=${this.fill[index]}
         />
       </mask>`;
   }
@@ -677,11 +693,11 @@ class MiniGraphCard extends LitElement {
 
     const entityConfig = this.config.entities[index];
     const lineWidth = entityConfig.set_line_width;
+    const { animate } = entityConfig;
 
-    const input = entityConfig.set_line_style || 'solid';
+    const input = entityConfig.set_line_style;
     const lineStyle = LINE_STYLES[input] || input.trim();
 
-    const animate = !!this.config.animate;
     const length = this.length[index];
     const hasLength = typeof length === 'number' && length > 0;
     const animationDelay = animate && hasLength ? `${renderIndex * 0.5}s` : '0s';
@@ -829,6 +845,8 @@ class MiniGraphCard extends LitElement {
 
   renderSvgBars(bars, index) {
     if (!bars) return;
+
+    const { animate } = this.config.entities[index];
     const fill = ['ambient'].find(ele => ele === this.config.show.fill);
     const horizontalDelay = this.config.bar_animate_horizontal;
     const items = bars.map((bar, i) => {
@@ -851,7 +869,7 @@ class MiniGraphCard extends LitElement {
           height=${bar.height} width=${bar.width} fill=${color}
           mask=${fill ? `url(#fill-${fill}-mask-${this.id}-${index}-${i})` : ''}
           style="
-            animation-delay: ${this.config.animate ? `${i * horizontalDelay}s` : '0s'};
+            animation-delay: ${animate ? `${i * horizontalDelay}s` : '0s'};
             --bar-x: ${bar.x}px;
             --baseline-y: ${baselineY}px;
           "
@@ -862,7 +880,7 @@ class MiniGraphCard extends LitElement {
     return svg`
       <g
         class='bars'
-        ?anim=${this.config.animate}
+        ?anim=${animate}
       >${items}</g>`;
   }
 

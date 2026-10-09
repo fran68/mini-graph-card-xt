@@ -18,6 +18,7 @@
 > * Add [styles](#line-styling) for lines
 > * Update bar animation logic, make it baseline aware, implement [staggered waterfall effect](#bar-animate-horizontal)
 > * Add [custom labeling](#show-label) and [scale modes](#scale-mode)
+> * Add per-entity animate option (see `animate` in [entity section](#entities-object))
 >
 > ### xt-0.5.x (2026-08-05)
 >
@@ -220,6 +221,7 @@ properties of the Entity object detailed in the following table (as per `sensor.
 | attribute | string |         |  | Retrieves an attribute or [sub-attribute (attr1.attr2...)](#accessing-attributes-in-complex-structures) instead of the state
 | name | string |         |  | Set a custom display name, defaults to entity's friendly_name.
 | graph | string |         |  | Override for the graph type, `bar` or `line`.
+| animate | boolean | `false` | NEXT_VERSION | Override for the animation of `bar` or `line`.
 | bar_spacing | number |         |  | Override for the spacing between bars in bar graph.
 | baseline | number |         | NEXT_VERSION | Override for the baseline / reference line.
 | line_style | string |         | NEXT_VERSION | Override for the line style.

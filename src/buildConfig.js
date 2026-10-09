@@ -202,6 +202,7 @@ export default (config) => {
     entityConf.align_label = normalizeEntity('align_label', 'number', undefined, { number: { min: -1, max: 101 } });
     entityConf.label_adaptive_color = normalizeEntity('label_adaptive_color', 'boolean', false);
     entityConf.scale_mode = normalizeEntity('scale_mode', undefined, 'clip', { stringArr: ['clip', 'fit'] });
+    entityConf.animate = normalizeEntity('animate', 'boolean', false);
 
     return entityConf;
   });
