@@ -652,9 +652,7 @@ class MiniGraphCard extends LitElement {
     const { animate, show_line } = this.config.entities[index];
     const fade = this.config.show.fill === 'fade';
 
-    const length = this.length[index];
-    const hasLength = typeof length === 'number' && length > 0;
-    const animationDelay = animate && hasLength ? `${renderIndex * 0.5}s` : '0s';
+    const animationDelay = animate ? `${renderIndex * 0.5}s` : '0s';
     const init = this.length[index] || show_line === false;
 
     const { baselineRatio: offset } = this.Graph[index];
@@ -698,30 +696,30 @@ class MiniGraphCard extends LitElement {
     const input = entityConfig.set_line_style;
     const lineStyle = LINE_STYLES[input] || input.trim();
 
+    const animationDelay = animate ? `${renderIndex * 0.5}s` : '0s';
     const length = this.length[index];
     const hasLength = typeof length === 'number' && length > 0;
-    const animationDelay = animate && hasLength ? `${renderIndex * 0.5}s` : '0s';
     const negativeLength = hasLength ? (length * -1) : 'none';
 
-    // Main path is triggered when animation is active AND the line style is 'none' (solid)
-    const isSolidAnimation = animate && lineStyle === 'none';
-
+    // Main path is triggered when animation is false, or
+    // animation is active (true) AND the line style is 'none' (solid)
     // A revealer mask is used when animation is active AND the line style is NOT 'none' (solid)
     const useReveal = animate && lineStyle !== 'none';
+    const anim = useReveal ? false : animate;
 
     // Use the path length if animation is active and lineStyle is 'none'. Otherwise, use lineStyle.
-    const strokeDasharray = isSolidAnimation
+    const strokeDasharray = anim
       ? `${length || 'none'}`
       : `${lineStyle}`;
 
-    const strokeDashoffset = isSolidAnimation
+    const strokeDashoffset = anim
       ? `${length || 'none'}`
       : '';
 
     // Fade-in animation by using path length, clearing the length in updated() once all
     // entities have been calculated and drawn to prevent unwanted subsequent animations
     // Init trigger for the .line[anim="true"][init] animation in CSS
-    const mainInit = isSolidAnimation && hasLength;
+    const mainInit = anim ? length : undefined;
     // Init trigger for the .line-revealer[anim="true"][init] animation in CSS
     const revealInit = useReveal && hasLength;
 
@@ -732,9 +730,9 @@ class MiniGraphCard extends LitElement {
         <path
           class='line'
           .id=${index}
-          anim=${isSolidAnimation}
+          anim=${anim}
           ?init=${mainInit}
-          style=${isSolidAnimation ? `animation-delay: ${animationDelay};` : ''}
+          style=${animate ? `animation-delay: ${animationDelay};` : ''}
           fill='none'
           stroke-dasharray=${strokeDasharray}
           stroke-dashoffset=${strokeDashoffset}
@@ -747,7 +745,7 @@ class MiniGraphCard extends LitElement {
         ${useReveal ? svg`
           <path
             class='line-revealer'
-            anim='true'
+            anim='reveal'
             ?init=${revealInit}
             style="
               animation-delay: ${animationDelay};

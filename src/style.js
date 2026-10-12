@@ -269,12 +269,9 @@ const style = css`
     opacity: 0;
     animation: pop .5s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
   }
-  .line-revealer[anim="true"][init] {
+  .line-revealer[anim="reveal"][init] {
     opacity: 1;
     animation: reveal-line 1s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
-  }
-  .line-revealer[anim="true"] {
-    opacity: 0;
   }
   .line--points[inactive],
   .line--rect[inactive],
@@ -335,9 +332,6 @@ const style = css`
   }
   .line[anim="true"][init] {
     animation: dash 1s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
-  }
-  .line[anim="true"] {
-    opacity: 1;
   }
   .graph__labels.--secondary {
     align-items: flex-end;
@@ -491,8 +485,11 @@ const style = css`
       opacity: 1;
       stroke-dashoffset: 0;
     }
-    100% {
+    25% {
       opacity: 1;
+    }
+    100% {
+      opacity: 0;
       stroke-dashoffset: var(--stroke-dashoffset);
     }
   }`;
