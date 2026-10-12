@@ -295,23 +295,20 @@ const style = css`
   .line--point:hover {
     fill: var(--mcg-hover, inherit) !important;
   }
-  .bars {
+  .bars[anim="false"] {
     animation: pop .25s cubic-bezier(0.215, 0.61, 0.355, 1);
-  }
-  .bars[anim] {
-    animation: bars .5s cubic-bezier(0.215, 0.61, 0.355, 1);
   }
   .bar {
     transition: opacity .25s cubic-bezier(0.215, 0.61, 0.355, 1);
-    transform-origin: var(--bar-x) var(--baseline-y);
+    transform-origin: center var(--baseline-y);
   }
   .bar:hover {
-    opacity: .5;
+    opacity: .5 !important;
     cursor: pointer;
   }
-  .bars[anim] .bar {
-    transform: scaleY(0);
-    animation: bar 1s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+  .bars[anim="true"] .bar {
+    transform: scaleY(var(--scale-y));
+    animation: scale 1s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
   }
   ha-card[gradient] .line--point:hover {
     fill: var(--primary-text-color, white);
@@ -458,16 +455,6 @@ const style = css`
     0% { opacity: 0; }
     100% { opacity: 1; }
   }
-  @keyframes bars {
-    0% { opacity: 0; }
-    50% { opacity: 0; }
-    100% { opacity: 1; }
-  }
-  @keyframes bar {
-    to {
-      transform: scaleY(1);
-    }
-  }
   @keyframes dash {
     0% {
       opacity: 0;
@@ -492,6 +479,11 @@ const style = css`
       opacity: 0;
       stroke-dashoffset: var(--stroke-dashoffset);
     }
+  }
+  @keyframes scale {
+    0% { opacity: 0; }
+    25% { opacity: 1; }
+    100% { opacity: 1; transform: scaleY(1);}
   }`;
 
 export default style;

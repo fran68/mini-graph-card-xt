@@ -254,14 +254,23 @@ class MiniGraphCard extends LitElement {
   }
 
   updated(changedProperties) {
-    if (this.config.entities.some(entityConfig => entityConfig.animate === true) && changedProperties.has('line')) {
-      if (this.length.length < this.entity.length) {
-        this.shadowRoot.querySelectorAll('svg path.line').forEach((ele) => {
-          this.length[ele.id] = ele.getTotalLength();
-        });
-        this.length = [...this.length];
-      } else {
-        this.length = Array(this.entity.length).fill('none');
+    const wantsAnimation = this.config.entities.some(entityConfig => entityConfig.animate === true);
+
+    if (wantsAnimation) {
+      if (changedProperties.has('line') || changedProperties.has('bar')) {
+        const selector = 'svg path.line, svg g.bars';
+        if (this.length.length < this.entity.length) {
+          this.shadowRoot.querySelectorAll(selector).forEach((ele) => {
+            if (ele.tagName === 'path' || ele.classList.contains('line')) {
+              this.length[ele.id] = ele.getTotalLength();
+            } else if (ele.tagName === 'g' || ele.classList.contains('bars')) {
+              this.length[ele.id] = true;
+            }
+          });
+          this.length = [...this.length];
+        } else {
+          this.length = Array(this.entity.length).fill('none');
+        }
       }
     }
   }
@@ -847,6 +856,9 @@ class MiniGraphCard extends LitElement {
     const { animate } = this.config.entities[index];
     const fill = ['ambient'].find(ele => ele === this.config.show.fill);
     const horizontalDelay = this.config.bar_animate_horizontal;
+    // Determine if this specific bar series is still in its initial animating phase
+    const scaleY = this.length[index] !== 'none' ? 0 : 1;
+
     const items = bars.map((bar, i) => {
       const color = this.computeColor(bar.value, index);
       const baselineY = bar.value >= 0 ? (bar.y + bar.height) : bar.y;
@@ -868,8 +880,8 @@ class MiniGraphCard extends LitElement {
           mask=${fill ? `url(#fill-${fill}-mask-${this.id}-${index}-${i})` : ''}
           style="
             animation-delay: ${animate ? `${i * horizontalDelay}s` : '0s'};
-            --bar-x: ${bar.x}px;
             --baseline-y: ${baselineY}px;
+            --scale-y: ${scaleY};
           "
           @mouseover=${() => this.setTooltip(index, i, bar.value)}
           @mouseout=${() => (this.tooltip = {})}>
@@ -878,7 +890,8 @@ class MiniGraphCard extends LitElement {
     return svg`
       <g
         class='bars'
-        ?anim=${animate}
+        .id=${index}
+        anim=${animate}
       >${items}</g>`;
   }
 
