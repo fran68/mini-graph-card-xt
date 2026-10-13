@@ -898,6 +898,36 @@ class MiniGraphCard extends LitElement {
   renderSvg() {
     const { height } = this.config;
     const { xLines, xLabels } = this.renderXAxis;
+    const hidden = this._hiddenSeries;
+    let renderIndex = -1;
+
+    const entitiesResult = this.visibleEntitiesSorted.map((entity) => {
+      if (!entity) return null;
+      const { index } = entity;
+
+      if (hidden.has(index)) return null;
+      if (this.bar[index]) {
+        return this.renderSvgBars(this.bar[index], index);
+      }
+      if (this.line[index]) {
+        renderIndex += 1;
+        return svg`
+          ${this.renderSvgFill(this.fill[index], index, renderIndex)}
+          ${this.renderSvgFillRect(this.fill[index], index)}
+          ${this.renderSvgLine(this.line[index], index, renderIndex)}
+          ${this.renderSvgLineRect(this.line[index], index)}
+        `;
+      }
+      return null;
+    }).filter(item => item !== null);
+
+    const pointsResult = this.points.map((points, index) => {
+      if (!points) return null;
+
+      if (hidden.has(index)) return null;
+      return this.renderSvgPoints(points, index);
+    }).filter(item => item !== null);
+
     /* eslint-disable indent */
     return svg`
       <svg width='100%' height=${height !== 0 ? '100%' : 0}
@@ -908,27 +938,10 @@ class MiniGraphCard extends LitElement {
           <defs>
             ${this.renderSvgGradient(this.gradient)}
           </defs>
-          ${this.visibleEntitiesSorted.map((entity, renderIndex) => {
-            const { index } = entity;
-            if (this._hiddenSeries.has(index)) {
-              return '';
-            }
-            if (this.bar[index]) {
-              return this.renderSvgBars(this.bar[index], index);
-            }
-            if (this.line[index]) {
-              return svg`
-                ${this.renderSvgFill(this.fill[index], index, renderIndex)}
-                ${this.renderSvgFillRect(this.fill[index], index)}
-                ${this.renderSvgLine(this.line[index], index, renderIndex)}
-                ${this.renderSvgLineRect(this.line[index], index)}
-              `;
-            }
-            return '';
-          })}
+          ${entitiesResult}
         </g>
         <g class="xlabels">${xLabels}</g>
-        ${this.points.map((points, i) => this.renderSvgPoints(points, i))}
+        ${pointsResult}
       </svg>`;
     /* eslint-enable indent */
   }
