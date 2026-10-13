@@ -1402,20 +1402,23 @@ class MiniGraphCard extends LitElement {
   }
 
   updateBounds({ config } = this) {
+    const primary = config.y_axes.primary || {};
+    const secondary = config.y_axes.secondary || {};
+
     this.bound = this.getBoundaries(
       this.primaryYaxisSeries,
-      config.lower_bound,
-      config.upper_bound,
+      primary.lower_bound,
+      primary.upper_bound,
       this.bound,
-      config.min_bound_range,
+      primary.min_bound_range,
     );
 
     this.boundSecondary = this.getBoundaries(
       this.secondaryYaxisSeries,
-      config.lower_bound_secondary,
-      config.upper_bound_secondary,
+      secondary.lower_bound,
+      secondary.upper_bound,
       this.boundSecondary,
-      config.min_bound_range_secondary,
+      secondary.min_bound_range,
     );
   }
 

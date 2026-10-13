@@ -56,6 +56,23 @@ const log = (message) => {
   console.warn(prefix, colorStyle, message);
 };
 
+const ensureObjectPath = (obj, pathArray) => {
+  let current = obj;
+
+  for (let i = 0; i < pathArray.length; i += 1) {
+    const key = pathArray[i];
+
+    // Re-create the property if it's missing or not an object
+    if (!current[key] || typeof current[key] !== 'object') {
+      current[key] = {};
+    }
+    current = current[key];
+  }
+
+  // Returns the deepest nested (and now guaranteed) object
+  return current;
+};
+
 const isValidNumber = (val, numberConfig) => {
   if (typeof val !== 'number' || Number.isNaN(val)) return false;
 
@@ -186,13 +203,15 @@ const normalizeItem = (
     }
 
     // Boundary violation error (only throw at global level)
-    if (!isValid && index === 1 && type === 'number') {
+    if (!isValid && type === 'number') {
       const numConf = options.number || {};
       // eslint-disable-next-line object-curly-newline
       const { min = -Infinity, gt = -Infinity, max = Infinity, lt = Infinity } = numConf;
       const { cleaned } = cleanNumber(val, numConf || {});
       if (cleaned < min || cleaned <= gt || cleaned > max || cleaned >= lt) {
-        throw new Error(`[Configuration Error]${options.name ? ` [${options.name}]` : ''} Contradictory bounds detected`);
+        throw new Error('[Configuration Error]'
+          + `${index === 0 && options.contextName ? ` (${options.contextName})` : options.parentLevelName ? ` (${options.parentLevelName})` : ''}
+          Contradictory bounds detected, check value for '${item}': ${cleaned}`);
       }
     }
 
@@ -238,5 +257,6 @@ export {
   getMin, getAvg, getMax, getMinMaxNumber,
   getTime, getMilli, getTimestamp, compress, decompress,
   getFirstDefinedItem, getFirstNumber,
-  fastHash, compareArray, log, normalizeItem,
+  fastHash, compareArray, log,
+  ensureObjectPath, normalizeItem,
 };

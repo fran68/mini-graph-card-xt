@@ -1,5 +1,5 @@
 import {
-  normalizeItem,
+  ensureObjectPath, normalizeItem,
 } from './utils';
 import {
   URL_DOCS,
@@ -107,19 +107,6 @@ const computeThresholds = (stops, type) => {
   }
 };
 
-// Wrapper
-/* eslint-disable implicit-arrow-linebreak */
-const createNormalizer = (config, parentConfig, contextName, parentLevelName = '', debug) =>
-  (item, type, defaultVal, specificOptions = {}) =>
-    normalizeItem(config, item, type, defaultVal, {
-      parentConfig,
-      debug,
-      contextName,
-      parentLevelName,
-      ...specificOptions,
-    });
-/* eslint-enable implicit-arrow-linebreak */
-
 export default (config) => {
   if (!Array.isArray(config.entities))
     throw new Error(`Please provide the "entities" option as a list.\n See ${URL_DOCS}`);
@@ -159,9 +146,27 @@ export default (config) => {
     show: { ...DEFAULT_SHOW, ...cleanConfig.show },
   };
 
-  const lineStyleRegex = /^(none|\d+(\.\d+)?([\s,]+\d+(\.\d+)?)*)$/;
   conf.debug = normalizeItem(conf, 'debug', 'boolean', false);
 
+  /* eslint-disable implicit-arrow-linebreak */
+  const createNormalizer = (mainConfig, parentConfig, contextName, parentLevelName = '') => {
+    const baseOptions = {
+      parentConfig, debug: conf.debug, contextName, parentLevelName,
+    };
+
+    return (item, type, defaultVal, specificOptions = {}) => {
+      const finalOptions = Object.assign({}, baseOptions, specificOptions);
+      return normalizeItem(mainConfig, item, type, defaultVal, finalOptions);
+    };
+  };
+  /* eslint-enable implicit-arrow-linebreak */
+
+  const lineStyleRegex = /^(none|\d+(\.\d+)?([\s,]+\d+(\.\d+)?)*)$/;
+  const allAxes = new Set(['primary', 'secondary']);
+
+  /*
+   * Normalize  E n t i t y  configuration options
+   */
   conf.entities = conf.entities.map((entity, index) => {
     const entityConf = typeof entity === 'string' ? { entity } : { ...entity };
 
@@ -173,20 +178,17 @@ export default (config) => {
         entityConf.entity = `sensor.virtual_static_value_${entityConf.static_value}_${index}`;
     }
 
-    let contextName;
-    if (conf.debug) {
-      const logName = entityConf.name || entityConf.entity;
-      contextName = `Entity (${index + 1}) '${logName}'`;
-    }
+    const contextName = `Entity (${index + 1}) '${entityConf.name || entityConf.entity}'`;
 
     // Initialize the normalize functions
-    const normalizeEntity = createNormalizer(entityConf, conf, contextName, '', conf.debug);
-    const normalizeEntityShow = createNormalizer(entityConf, conf.show, contextName, 'show', conf.debug);
+    const normalizeEntity = createNormalizer(entityConf, conf, contextName, '');
+    const normalizeEntityShow = createNormalizer(entityConf, conf.show, contextName, 'show');
 
-    // Normalize specific configuration options against options at global or other level
+    // Normalize entity configuration options against options at global or other level
     // and set option unconditionally as an entity option
     entityConf.set_graph = normalizeEntityShow('graph', undefined, DEFAULT_SHOW.graph, { stringArr: ['line', 'bar'] });
     entityConf.set_y_axis = normalizeEntity('y_axis', undefined, 'primary', { stringArr: ['primary', 'secondary'] });
+    allAxes.add(entityConf.set_y_axis);
     entityConf.set_line_width = normalizeEntity('line_width', 'number', DEFAULT_LINE_WIDTH, { number: { min: 0 } });
     entityConf.set_bar_spacing = normalizeEntity('bar_spacing', 'number', DEFAULT_BAR_SPACING, { number: { min: 0 } });
     entityConf.set_line_style = normalizeEntity('line_style', 'string', DEFAULT_LINE_STYLE,
@@ -207,7 +209,31 @@ export default (config) => {
     return entityConf;
   });
 
-  const normalize = createNormalizer(conf, '', '', '', conf.debug);
+  /*
+   * Normalize  A x e s  configuration options
+   */
+  conf.allAxes = Array.from(allAxes);
+  conf.allAxes.forEach((axis) => {
+    // Safely initialize the y_axes object chain and fetch the existing objects
+    const axisConf = ensureObjectPath(conf, ['y_axes', axis]);
+
+    // Initialize the normalize function
+    const normalizeAxis = createNormalizer(axisConf, conf, `Axis 'y_axes.${axis}'`, 'Global');
+
+    // Normalize axes configuration options against legacy options
+    const ext = axis !== 'primary' ? `_${axis}` : '';
+    axisConf.lower_bound = normalizeAxis('lower_bound', 'number', undefined, { parentItem: `lower_bound${ext}`, number: { allowedPrefixes: ['~'] } });
+    axisConf.upper_bound = normalizeAxis('upper_bound', 'number', undefined, { parentItem: `upper_bound${ext}`, number: { allowedPrefixes: ['~'], min: axisConf.lower_bound } });
+    axisConf.min_bound_range = normalizeAxis('min_bound_range', 'number', undefined, { parentItem: `min_bound_range${ext}` });
+  });
+
+  /*
+   * Normalize  G l o b a l  configuration options
+   */
+  // Initialize the normalize function
+  const normalize = createNormalizer(conf, '', '', '');
+
+  // Normalize global configuration options
   conf.render_priority = normalize('render_priority', undefined, undefined, { stringArr: ['reverse', 'custom'] });
 
   if (typeof cleanConfig.line_color === 'string')
