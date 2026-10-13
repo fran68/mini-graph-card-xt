@@ -275,7 +275,8 @@ const style = css`
   }
   .line--points[inactive],
   .line--rect[inactive],
-  .fill--rect[inactive] {
+  .fill--rect[inactive],
+  .bars[inactive] {
     opacity: 0 !important;
     animation: none !important;
     transition: all .15s !important;
@@ -366,6 +367,9 @@ const style = css`
     transform: translateY(-50%);
     transform: translate(calc(-1 * var(--custom-label-left, 0%)), -50%);
     color: var(--custom-label-color, var(--secondary-text-color));
+  }
+  .label__custom[inactive] {
+    opacity: 0 !important;
   }
   .graph__legend {
     display: flex;

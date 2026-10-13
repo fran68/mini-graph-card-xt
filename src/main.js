@@ -140,6 +140,8 @@ class MiniGraphCard extends LitElement {
 
       // Cache for getters
       this._visibleEntities = null;
+      this._primaryLabelEntities = null;
+      this._secondaryLabelEntities = null;
       this._visibleEntitiesSorted = null;
       this._realEntities = null;
       this._realEntitiesLines = null;
@@ -824,12 +826,14 @@ class MiniGraphCard extends LitElement {
 
   renderSvgLineRect(line, i) {
     if (!line) return;
+
+    const { show_inactive } = this.config.entities[i];
     const fill = this.gradient[i]
       ? `url(#grad-${this.id}-${i})`
       : this.computeColor(this.entity[i].state, i);
     return svg`
       <rect class='line--rect'
-        ?inactive=${this.tooltip.entity !== undefined && this.tooltip.entity !== i}
+        ?inactive=${this.tooltip.entity !== undefined && this.tooltip.entity !== i && show_inactive !== true}
         id=${`rect-${this.id}-${i}`}
         fill=${fill} height="100%" width="100%"
         mask=${`url(#line-${this.id}-${i})`}
@@ -853,7 +857,7 @@ class MiniGraphCard extends LitElement {
   renderSvgBars(bars, index) {
     if (!bars) return;
 
-    const { animate } = this.config.entities[index];
+    const { animate, show_inactive } = this.config.entities[index];
     const fill = ['ambient'].find(ele => ele === this.config.show.fill);
     const horizontalDelay = this.config.bar_animate_horizontal;
     // Determine if this specific bar series is still in its initial animating phase
@@ -892,6 +896,7 @@ class MiniGraphCard extends LitElement {
         class='bars'
         .id=${index}
         anim=${animate}
+        ?inactive=${this.tooltip.entity !== undefined && this.tooltip.entity !== index && show_inactive !== true}
       >${items}</g>`;
   }
 
@@ -1028,16 +1033,14 @@ class MiniGraphCard extends LitElement {
    * @returns {any} A Lit HTML template containing the custom labels.
    */
   renderLabelsCustom(axis_type = 'primary') {
-    const labelEntities = this.visibleEntities.filter(entityConfig => entityConfig.show_label
-      && entityConfig.set_y_axis === axis_type);
+    const labelEntities = axis_type === 'primary' ? this.primaryLabelEntities : this.secondaryLabelEntities;
 
     const customLabels = labelEntities.map((entityConfig) => {
-      const { index } = entityConfig;
+      const { index, show_inactive } = entityConfig;
+      if (this._hiddenSeries.has(index)) return null;
 
       const val = this.getEntityState(index);
       const pixelTop = this.Graph[index].getCoordY(val);
-
-      if (this._hiddenSeries.has(index)) return null;
 
       const defaultLeftPercent = axis_type === 'primary' ? 0 : 100;
       const leftPercent = entityConfig.align_label !== undefined
@@ -1050,26 +1053,20 @@ class MiniGraphCard extends LitElement {
       const safeTopPercent = (safeTop / this.config.height) * 100;
       const color = entityConfig.label_adaptive_color ? this.computeColor(val, index) : '';
 
-      return {
-        value: this.computeState(val),
-        top: safeTopPercent,
-        left: leftPercent,
-        color,
-      };
-    }).filter(label => label !== null);
-
-    return html`
-      ${customLabels.map(label => html`
+      return html`
         <span class="label__custom"
+          ?inactive=${this.tooltip.entity !== undefined && this.tooltip.entity !== index && show_inactive !== true}
           style="
-            --custom-label-top: ${label.top}%;
-            --custom-label-left: ${label.left}%;
-            --custom-label-color: ${label.color};
+            --custom-label-top: ${safeTopPercent}%;
+            --custom-label-left: ${leftPercent}%;
+            --custom-label-color: ${color};
           ">
-          ${label.value}
+          ${this.computeState(val)}
         </span>
-      `)}
-    `;
+      `;
+    });
+
+    return html`${customLabels}`;
   }
 
   renderInfo() {
@@ -1107,6 +1104,22 @@ class MiniGraphCard extends LitElement {
       this._visibleEntities = this.config.entities.filter(entity => entity.show_graph !== false);
     }
     return this._visibleEntities;
+  }
+
+  get primaryLabelEntities() {
+    if (this._primaryLabelEntities === null) {
+      this._primaryLabelEntities = this.visibleEntities
+        .filter(entity => entity.show_label !== false && entity.set_y_axis === 'primary');
+    }
+    return this._primaryLabelEntities;
+  }
+
+  get secondaryLabelEntities() {
+    if (this._secondaryLabelEntities === null) {
+      this._secondaryLabelEntities = this.visibleEntities
+        .filter(entity => entity.show_label !== false && entity.set_y_axis === 'secondary');
+    }
+    return this._secondaryLabelEntities;
   }
 
   get visibleEntitiesSorted() {

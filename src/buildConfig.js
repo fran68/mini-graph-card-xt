@@ -205,6 +205,7 @@ export default (config) => {
     entityConf.label_adaptive_color = normalizeEntity('label_adaptive_color', 'boolean', false);
     entityConf.scale_mode = normalizeEntity('scale_mode', undefined, 'clip', { stringArr: ['clip', 'fit'] });
     entityConf.animate = normalizeEntity('animate', 'boolean', false);
+    entityConf.show_inactive = normalizeEntityShow('show_inactive', 'boolean', false, { parentItem: 'inactive' });
 
     return entityConf;
   });

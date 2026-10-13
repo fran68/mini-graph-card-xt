@@ -19,6 +19,7 @@
 > * Update bar animation logic, make it baseline aware, implement [staggered waterfall effect](#bar-animate-horizontal)
 > * Add [custom labeling](#show-label) and [scale modes](#scale-mode)
 > * Add per-entity animate option (see `animate` in [entity section](#entities-object))
+> * Add per-entity and show option for `inactive` behavior of graphs (see [Visualizing Inactive States during Hover](#visualizing-inactive-states-during-hover))
 >
 > ### xt-0.5.x (2026-08-05)
 >
@@ -239,6 +240,7 @@ properties of the Entity object detailed in the following table (as per `sensor.
 | show_fill | boolean |         |  | Set to false to hide the fill.
 | show_points | boolean |         |  | Set to false to hide the points.
 | show_legend | boolean |         |  | Set to false to turn hide from the legend.
+| <a id="show-inactive">show_inactive</a> | boolean | parent | NEXT_VERSION | Overrides the global show `inactive` setting for this specific entity. Set to `true` to keep this entity visible during hover, or `false` to hide it (see [Visualizing Inactive States during Hover](#visualizing-inactive-states-during-hover)).
 | state_adaptive_color | boolean |         |  | Make the color of the state adapt to the entity color.
 | y_axis | string |         |  | If 'secondary', displays using the secondary y-axis on the right.
 | fixed_value | boolean |         |  | Set to true to graph the entity's current state as a fixed value instead of graphing its state history.
@@ -273,6 +275,7 @@ All properties are optional.
 | extrema | `false` | `true` / `false` |  | Display max/min information.
 | labels | `hover` | `true` / `false` / `hover` |  | Display Y-axis labels.
 | labels_secondary | `hover` | `true` / `false` / `hover` |  | Display secondary Y-axis labels.
+| <a id="inactive">inactive</a> | `false` | `true` / `false` | NEXT_VERSION | If set to `true`, all graph entities remain visible when hovering over a specific bar or line point, instead of being hidden (see [Visualizing Inactive States during Hover](#visualizing-inactive-states-during-hover)).
 | name_adaptive_color | `false` | `true` / `false` |  | Make the name color adapt with the primary entity color.
 | icon_adaptive_color | `false` | `true` / `false` |  | Make the icon color adapt with the primary entity color.
 | loading_indicator | `true` | `true` / `false` |  | Show loading indicator while attempting to retrieve a history.
@@ -974,7 +977,7 @@ Since lines and bars can now be drawn simultaneously, the padding behavior has b
 The margin implementation extends the graph area for lines and bars by the margin. For bars this causes a small bar stub to appear even when a sensor value is exactly 0. To fix this, the new configuration option `margin_y` is introduced. Setting `margin_y: 0` removes this artificial extension for bar graphs completely (forcing an exact zero-baseline) for signed bars (only positive or negative values), with the acknowledged trade-off that regular lines might get slightly clipped at the top/bottom boundaries if both types are combined. Furthermore, an override also for the X-margin is possible.
 
 
-#### Custom Labeling & Scaling Modes
+### Custom Labeling & Scaling Modes
 
 This update introduces advanced custom label position control, adaptive colors, and smart axis scaling constraints for chart entities. This gives users full control over how threshold lines, static limits, and individual sensor value labels are displayed and how they impact the chart's overall Y-axis boundaries.
 
@@ -1003,6 +1006,14 @@ entities:
     scale_mode: fit                # Graph always stays zoomed out enough to show this baseline
 ```
 
+### Visualizing Inactive States during Hover
+
+By default, when you hover over a specific graph or bar, all other entities/series in the card are dimmed or hidden to highlight the selected data point/line or bar.
+
+With the new `inactive` options, you can change this behavior so that lines or bars remain fully visible even when another entity is hovered or selected.
+- **Global control under show:** Use the show [inactive](#inactive) option to keep all entities visible.
+- **Per-entity control:** Use the entity-level [show_inactive](#show-inactive) option to override the global setting for specific entities (e.g., keeping a critical baseline visible, or hiding a single entity while others stay up).
+- **Priority:** The per-entity configuration always takes precedence over the global option.
 
 
 
