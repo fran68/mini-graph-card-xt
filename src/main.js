@@ -858,9 +858,11 @@ class MiniGraphCard extends LitElement {
 
     const { animate, show_inactive } = this.config.entities[index];
     const fill = ['ambient'].find(ele => ele === this.config.show.fill);
-    const horizontalDelay = this.config.bar_animate_horizontal;
+
+    const length = this.length[index];
+    const horizontalDelay = length !== 'none' ? this.config.bar_animate_horizontal : 0;
     // Determine if this specific bar series is still in its initial animating phase
-    const scaleY = this.length[index] !== 'none' ? 0 : 1;
+    const scaleY = length !== 'none' ? 0 : 1;
 
     const items = bars.map((bar, i) => {
       const color = this.computeColor(bar.value, index);
