@@ -152,7 +152,7 @@ class MiniGraphCard extends LitElement {
       // Determine line width
       const visibleLines = this.realEntitiesLines || []; // /wo static value lines
       const hasLines = visibleLines.length > 0;
-      this.line_width = getMinMaxNumber(visibleLines, 'set_line_width', DEFAULT_LINE_WIDTH);
+      this.line_width = getMinMaxNumber(visibleLines, 'line_width', DEFAULT_LINE_WIDTH);
       const defaultX = hasLines ? (this.config.show.fill ? 0 : this.line_width.max) : 0;
       const defaultY = hasLines ? this.line_width.max : DEFAULT_MARGIN;
       this.margin = [
@@ -164,13 +164,13 @@ class MiniGraphCard extends LitElement {
       let slot = 0;
       this.barStackPosition = this.config.entities.map((entityConfig, index) => {
         // Skip entities that are not visible bar charts
-        if (entityConfig.set_graph !== 'bar' || entityConfig.show_graph === false) {
+        if (entityConfig.graph !== 'bar' || entityConfig.show_graph === false) {
           return undefined;
         }
 
         // Determine the unique key for the group (stacked or standalone)
         const key = entityConfig.stack
-          ? `${entityConfig.stack}_${entityConfig.set_y_axis}`
+          ? `${entityConfig.stack}_${entityConfig.y_axis}`
           : `standalone_${index}`;
 
         // If the key is new, assign the current slot and increment it
@@ -198,12 +198,12 @@ class MiniGraphCard extends LitElement {
           500,
           this.config.height,
           this.margin,
-          entity.set_graph,
+          entity.graph,
           this.config.hours_to_show,
           this.config.points_per_hour,
           entity.aggregate_func || this.config.aggregate_func,
           this.config.group_by,
-          entity.set_baseline,
+          entity.baseline,
           getFirstDefinedItem(
             entity.smoothing,
             this.config.smoothing,
@@ -212,7 +212,7 @@ class MiniGraphCard extends LitElement {
           this.config.logarithmic,
           visibleBarStacks, // bar related
           this.barStackPosition[index], // bar related
-          entity.set_bar_spacing, // bar related
+          entity.bar_spacing, // bar related
           this.config.bar_spacing_group, // bar related
         ),
       );
@@ -700,10 +700,10 @@ class MiniGraphCard extends LitElement {
     if (!line) return;
 
     const entityConfig = this.config.entities[index];
-    const lineWidth = entityConfig.set_line_width;
+    const lineWidth = entityConfig.line_width;
     const { animate } = entityConfig;
 
-    const input = entityConfig.set_line_style;
+    const input = entityConfig.line_style;
     const lineStyle = LINE_STYLES[input] || input.trim();
 
     const animationDelay = animate ? `${renderIndex * 0.5}s` : '0s';
@@ -775,7 +775,7 @@ class MiniGraphCard extends LitElement {
   }
 
   renderSvgPoint(point, i) {
-    const lineWidth = this.config.entities[i].set_line_width;
+    const lineWidth = this.config.entities[i].line_width;
     const color = this.gradient[i] ? this.computeColor(point[V], i) : 'inherit';
     return svg`
       <circle
@@ -793,7 +793,7 @@ class MiniGraphCard extends LitElement {
 
   renderSvgPoints(points, i) {
     if (!points) return;
-    const lineWidth = this.config.entities[i].set_line_width;
+    const lineWidth = this.config.entities[i].line_width;
     const color = this.computeColor(this.entity[i].state, i);
     return svg`
       <g class='line--points'
@@ -959,7 +959,7 @@ class MiniGraphCard extends LitElement {
     } = this.config;
 
     // omit first point
-    const offset = this.config.entities[entity].set_graph === 'bar' ? 1 : 0;
+    const offset = this.config.entities[entity].graph === 'bar' ? 1 : 0;
 
     // time units in milliseconds in this function
     const interval = getMilli(1 / points_per_hour);
@@ -1108,7 +1108,7 @@ class MiniGraphCard extends LitElement {
   get primaryLabelEntities() {
     if (this._primaryLabelEntities === null) {
       this._primaryLabelEntities = this.visibleEntities
-        .filter(entity => entity.show_label !== false && entity.set_y_axis === 'primary');
+        .filter(entity => entity.show_label !== false && entity.y_axis === 'primary');
     }
     return this._primaryLabelEntities;
   }
@@ -1116,7 +1116,7 @@ class MiniGraphCard extends LitElement {
   get secondaryLabelEntities() {
     if (this._secondaryLabelEntities === null) {
       this._secondaryLabelEntities = this.visibleEntities
-        .filter(entity => entity.show_label !== false && entity.set_y_axis === 'secondary');
+        .filter(entity => entity.show_label !== false && entity.y_axis === 'secondary');
     }
     return this._secondaryLabelEntities;
   }
@@ -1153,19 +1153,19 @@ class MiniGraphCard extends LitElement {
 
   get realEntitiesLines() {
     if (this._realEntitiesLines === null)
-      this._realEntitiesLines = this.realEntities.filter(entity => entity.set_graph === 'line');
+      this._realEntitiesLines = this.realEntities.filter(entity => entity.graph === 'line');
     return this._realEntitiesLines;
   }
 
   get primaryYaxisEntities() {
     if (this._primaryYaxisEntities === null) {
       this._primaryYaxisEntities = this.realEntities.filter(
-        entity => entity.set_y_axis === 'primary',
+        entity => entity.y_axis === 'primary',
       );
 
       if (this._primaryYaxisEntities.length === 0) {
         this._primaryYaxisEntities = this.visibleEntities.filter(
-          entity => entity.set_y_axis === 'primary',
+          entity => entity.y_axis === 'primary',
         );
       }
     }
@@ -1175,12 +1175,12 @@ class MiniGraphCard extends LitElement {
   get secondaryYaxisEntities() {
     if (this._secondaryYaxisEntities === null) {
       this._secondaryYaxisEntities = this.realEntities.filter(
-        entity => entity.set_y_axis === 'secondary',
+        entity => entity.y_axis === 'secondary',
       );
 
       if (this._secondaryYaxisEntities.length === 0) {
         this._secondaryYaxisEntities = this.visibleEntities.filter(
-          entity => entity.set_y_axis === 'secondary',
+          entity => entity.y_axis === 'secondary',
         );
       }
     }
@@ -1352,7 +1352,7 @@ class MiniGraphCard extends LitElement {
           this._hiddenSeries.add(entityConfig.index);
         }
 
-        if (entityConfig.set_graph === 'bar') {
+        if (entityConfig.graph === 'bar') {
           this.bar[i] = this.Graph[i].getBars();
         } else {
           const line = this.Graph[i].getPath();
