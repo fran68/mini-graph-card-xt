@@ -210,7 +210,6 @@ class MiniGraphCard extends LitElement {
             entity.entity ? !entity.entity.startsWith('binary_sensor.') : false, // turn off for binary sensor by default and fallback for virtual lines
           ),
           this.config.logarithmic,
-          this.config.tension,
           visibleBarStacks, // bar related
           this.barStackPosition[index], // bar related
           entity.set_bar_spacing, // bar related

@@ -20,6 +20,7 @@
 > * Add [custom labeling](#show-label) and [scale modes](#scale-mode)
 > * Add per-entity animate option (see `animate` in [entity section](#entities-object))
 > * Add per-entity and show option for `inactive` behavior of graphs (see [Visualizing Inactive States during Hover](#visualizing-inactive-states-during-hover))
+> * Revise [Cubic Bézier curve](#cubic-bézier-curve) to prevent lines from 'overshooting'
 >
 > ### xt-0.5.x (2026-08-05)
 >
@@ -199,7 +200,7 @@ We recommend looking at the [Example usage section](#example-usage) to understan
 | lower_bound_secondary | number *or* string |  | v0.5.0 | Set a fixed lower bound for the graph secondary Y-axis. String value starting with ~ (e.g. `~50`) specifies soft bound.
 | upper_bound_secondary | number *or* string |  | v0.5.0 | Set a fixed upper bound for the graph secondary Y-axis. String value starting with ~ (e.g. `~50`) specifies soft bound.
 | min_bound_range_secondary | number |  | v0.x.x | Applied after everything, makes sure there's a minimum range that the secondary Y-axis will have. Useful for not making small changes look large because of scale.
-| smoothing | boolean or string | `true` | v0.8.0 | Whether to make graph line smooth. Use `bezierc` to describe a line by a cubic Bezier curve.
+| <a id="smoothing">smoothing</a> | boolean or string | `true` | v0.8.0 | Whether to make graph line smooth. Use `cubic` to describe a line by a Cubic Bezier curve (see [Cubic Bézier curve](#cubic-bézier-curve)).
 | state_map | [state map object](#state-map-object) |  | v0.8.0 | List of entity states to convert (order matters as position becomes a value on the graph).
 | value_factor | number | 0 | v0.9.4 | Scale value by order of magnitude (e.g. convert Watts to kilo Watts), use negative value to scale down.
 | logarithmic | boolean | `false` | v0.10.0 | Use a Logarithmic scale for the graph
@@ -244,7 +245,7 @@ properties of the Entity object detailed in the following table (as per `sensor.
 | state_adaptive_color | boolean |         |  | Make the color of the state adapt to the entity color.
 | y_axis | string |         |  | If 'secondary', displays using the secondary y-axis on the right.
 | fixed_value | boolean |         |  | Set to true to graph the entity's current state as a fixed value instead of graphing its state history.
-| smoothing | boolean or string |         |  | Override for a flag indicating whether to make graph line smooth. Use `bezierc` to describe a line by a cubic Bezier curve.
+| <a id="entity-smoothing">smoothing</a> | boolean or string |         |  | Override for a flag indicating whether to make graph line smooth. Use `cubic` to describe a line by a cubic Bezier curve (see [Cubic Bézier curve](#cubic-bézier-curve)).
 | <a id="show-label">show_label</a> | boolean | `false` | NEXT_VERSION | Display a persistent floating label showing the current state of this specific entity on the graph, see [Custom Labeling](#custom-labeling--scaling-modes).
 | align_label | number | `0` (primary)<br>`100` (secondary) | NEXT_VERSION | Horizontal position of the custom label in percent (`0` for far left, `100` for far right). Labels maintain a safe visual margin from the edges, minimum and maximum labels.
 | label_adaptive_color | boolean | `false` | NEXT_VERSION | When enabled, the custom label's text color dynamically changes to match the current color state of the entity.
@@ -789,14 +790,15 @@ Configuration is highly flexible and can be defined at three levels. If multiple
 
 
 
-#### Cubic Bézier curve
+### Cubic Bézier Curve
 
-You can use the Cubic Bézier curve for a line graph (see option `smoothing` in [card section](#card-options) and [entity section](#entities-object)).
+You can use the Cubic Bézier curve for a line graph (see `smoothing` option in [card section](#smoothing) and [entity section](#entity-smoothing)).
 
 ![image](https://github.com/user-attachments/assets/ed0fdc37-472f-4f03-bc9b-5a5f30b636c5)
 
-With `show_state: last`, the state matches the value of the last touched point. Compared to a Quadratic (Q) curve (Default when `smoothing` set to `true`), the Cubic (C) Bézier curve aligns more accurately with the underlying data points.
-Example: The `smoothing` option is set to `bezierc` for the third entity to render a Cubic Bézier curve. 
+With `show_state: last`, the state matches the value of the last touched point. Compared to a Quadratic (Q) curve (Default when `smoothing` set to `true`), the Monotone Cubic (C) Bézier curve (Fritsch-Carlson algorithm) aligns more accurately with the underlying data points.
+
+##### Example: The `smoothing` option is set to `cubic` for the third entity to render a Cubic Bézier curve. 
 
 ```yaml
 type: custom:mini-graph-card-xt
@@ -816,7 +818,7 @@ entities:
     name: Consumed (Cubic Bezier curve)
     graph: line
     color: rgba(from rgb(47 195 130) r g b / 0.7)
-    smoothing: bezierc
+    smoothing: cubic
   - entity: sensor.total_energy_consumption
     name: Consumed (Linear)
     graph: line
