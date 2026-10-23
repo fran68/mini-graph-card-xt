@@ -143,6 +143,7 @@ class MiniGraphCard extends LitElement {
       this._primaryLabelEntities = null;
       this._secondaryLabelEntities = null;
       this._visibleEntitiesSorted = null;
+      this._visibleEntitiesSortedIndices = null;
       this._realEntities = null;
       this._realEntitiesLines = null;
       this._primaryYaxisEntities = null;
@@ -774,9 +775,18 @@ class MiniGraphCard extends LitElement {
     /* eslint-enable indent */
   }
 
-  renderSvgPoint(point, i) {
-    const lineWidth = this.config.entities[i].line_width;
-    const color = this.gradient[i] ? this.computeColor(point[V], i) : 'inherit';
+  /**
+   * Renders a single interactive SVG circle point for a chart line.
+   * Handles individual point colors, hover effects, and
+   * updates the global tooltip state on mouse events.
+   *
+   * @param {Array} point - Array containing [X, Y, V (Value), Data Point Index].
+   * @param {number} index - Index of the associated line entity.
+   * @returns {TemplateResult} Lit SVG template for the `<circle>` element.
+   */
+  renderSvgPoint(point, index) {
+    const lineWidth = this.config.entities[index].line_width;
+    const color = this.gradient[index] ? this.computeColor(point[V], index) : 'inherit';
     return svg`
       <circle
         class='line--point'
@@ -785,27 +795,37 @@ class MiniGraphCard extends LitElement {
         stroke=${color}
         fill=${color}
         cx=${point[X]} cy=${point[Y]} r=${lineWidth}
-        @mouseover=${() => this.setTooltip(i, point[3], point[V])}
+        @mouseover=${() => this.setTooltip(index, point[3], point[V])}
         @mouseout=${() => (this.tooltip = {})}
       />
     `;
   }
 
-  renderSvgPoints(points, i) {
+  /**
+   * Renders a group of SVG points for a specific chart line entity.
+   * Manages group highlighting, hover states, and
+   * dynamic CSS animation delays for sequential fading.
+   *
+   * @param {Array[]|null} points - Array of point coordinate pairs, values and data point indices.
+   * @param {number} index - Index of the associated line entity.
+   * @param {number} renderIndex - Visual index used to stagger the entry animations.
+   * @returns {TemplateResult|undefined} Lit SVG group template or undefined if empty.
+   */
+  renderSvgPoints(points, index, renderIndex) {
     if (!points) return;
-    const lineWidth = this.config.entities[i].line_width;
-    const color = this.computeColor(this.entity[i].state, i);
+    const lineWidth = this.config.entities[index].line_width;
+    const color = this.computeColor(this.entity[index].state, index);
     return svg`
       <g class='line--points'
-        ?tooltip=${this.tooltip.entity === i}
-        ?inactive=${this.tooltip.entity !== undefined && this.tooltip.entity !== i}
-        ?init=${this.length[i]}
+        ?tooltip=${this.tooltip.entity === index}
+        ?inactive=${this.tooltip.entity !== undefined && this.tooltip.entity !== index}
+        ?init=${this.length[index]}
         anim=${this.config.animate && this.config.show.points !== 'hover'}
-        style="animation-delay: ${this.config.animate ? `${i * 0.5 + 0.5}s` : '0s'}"
+        style="animation-delay: ${this.config.animate ? `${renderIndex * 0.5 + 0.5}s` : '0s'}"
         fill=${color}
         stroke=${color}
         stroke-width=${lineWidth / 2}>
-        ${points.map(point => this.renderSvgPoint(point, i))}
+        ${points.map(point => this.renderSvgPoint(point, index))}
       </g>`;
   }
 
@@ -901,37 +921,40 @@ class MiniGraphCard extends LitElement {
       >${items}</g>`;
   }
 
+  /**
+   * Main render function that assembles the complete chart SVG structure.
+   * Processes visible series to construct bars, lines, fills and points sequentially.
+   *
+   * @returns {TemplateResult} The complete Lit SVG element with all chart components.
+   */
   renderSvg() {
     const { height } = this.config;
     const { xLines, xLabels } = this.renderXAxis;
     const hidden = this._hiddenSeries;
-    let renderIndex = -1;
 
-    const entitiesResult = this.visibleEntitiesSorted.map((entity) => {
-      if (!entity) return null;
-      const { index } = entity;
-
+    const entitiesResult = this.visibleEntitiesSortedIndices.map((entityInfo) => {
+      const { index, lineRenderIndex } = entityInfo;
       if (hidden.has(index)) return null;
+
       if (this.bar[index]) {
         return this.renderSvgBars(this.bar[index], index);
       }
       if (this.line[index]) {
-        renderIndex += 1;
-        return svg`
-          ${this.renderSvgFill(this.fill[index], index, renderIndex)}
-          ${this.renderSvgFillRect(this.fill[index], index)}
-          ${this.renderSvgLine(this.line[index], index, renderIndex)}
-          ${this.renderSvgLineRect(this.line[index], index)}
-        `;
+        return [
+          this.renderSvgFill(this.fill[index], index, lineRenderIndex),
+          this.renderSvgFillRect(this.fill[index], index),
+          this.renderSvgLine(this.line[index], index, lineRenderIndex),
+          this.renderSvgLineRect(this.line[index], index),
+        ];
       }
       return null;
     }).filter(item => item !== null);
 
-    const pointsResult = this.points.map((points, index) => {
-      if (!points) return null;
-
+    const pointsResult = this.visibleEntitiesSortedIndices.map((entityInfo) => {
+      const { index, lineRenderIndex } = entityInfo;
       if (hidden.has(index)) return null;
-      return this.renderSvgPoints(points, index);
+
+      return this.renderSvgPoints(this.points[index], index, lineRenderIndex);
     }).filter(item => item !== null);
 
     /* eslint-disable indent */
@@ -1094,11 +1117,10 @@ class MiniGraphCard extends LitElement {
   }
 
   /**
-   * Evaluates, filters, and sorts the graph entities based on the configured rendering priority.
-   * Uses a lazy-loading cache pattern: filters and sorts the entities only once upon the first
-   * call or after a configuration reset, and returns the cached array on subsequent reads.
+   * Getter that filters and returns all chart entities configured
+   * to be visibly displayed on the graph.
    *
-   * @returns {Array} The array of entities to be rendered, ordered from background to foreground.
+   * @returns {Array<Object>} Array of visible entity configurations.
    */
   get visibleEntities() {
     if (this._visibleEntities === null) {
@@ -1107,6 +1129,12 @@ class MiniGraphCard extends LitElement {
     return this._visibleEntities;
   }
 
+  /**
+   * Getter that retrieves visible entities assigned to the primary
+   * Y-axis that should display labels.
+   *
+   * @returns {Array<Object>} Array of primary axis label entities.
+   */
   get primaryLabelEntities() {
     if (this._primaryLabelEntities === null) {
       this._primaryLabelEntities = this.visibleEntities
@@ -1115,6 +1143,12 @@ class MiniGraphCard extends LitElement {
     return this._primaryLabelEntities;
   }
 
+  /**
+   * Getter that retrieves visible entities assigned to the secondary
+   * Y-axis that should display labels.
+   *
+   * @returns {Array<Object>} Array of secondary axis label entities.
+   */
   get secondaryLabelEntities() {
     if (this._secondaryLabelEntities === null) {
       this._secondaryLabelEntities = this.visibleEntities
@@ -1123,10 +1157,17 @@ class MiniGraphCard extends LitElement {
     return this._secondaryLabelEntities;
   }
 
+  /**
+   * Getter that sorts visible entities based on the configured
+   * render priority (custom, reverse, or default).
+   *
+   * @returns {Array<Object>} Sorted array of visible entities.
+   */
   get visibleEntitiesSorted() {
     if (this._visibleEntitiesSorted === null) {
       const filtered = this.visibleEntities.slice();
       const priorityType = this.config.render_priority;
+
       if (priorityType === 'custom') {
         filtered.sort((a, b) => {
           const priorityA = a.priority !== undefined ? a.priority : 0;
@@ -1136,16 +1177,22 @@ class MiniGraphCard extends LitElement {
       } else if (priorityType === 'reverse') {
         filtered.reverse();
       }
+
       this._visibleEntitiesSorted = filtered;
     }
     return this._visibleEntitiesSorted;
   }
 
+  /**
+   * Getter that filters out static value entities unless they are
+   * explicitly configured with a 'fit' scale mode.
+   *
+   * @returns {Array<Object>} Array of dynamic or scaled entities.
+   */
   get realEntities() {
     if (this._realEntities === null)
       this._realEntities = this.visibleEntities.filter((entity) => {
         const isStatic = typeof entity.static_value === 'number';
-
         if (!isStatic) return true;
 
         return entity.scale_mode === 'fit';
@@ -1153,6 +1200,40 @@ class MiniGraphCard extends LitElement {
     return this._realEntities;
   }
 
+  /**
+   * Getter that maps visible entities to their sorted indices and calculates line render order.
+   * Caches the computed index mapping array to optimize re-renders and animation staggering.
+   *
+   * @returns {Array<{index: number, lineRenderIndex: number|null}>} Sorted entity index mapping.
+   */
+  get visibleEntitiesSortedIndices() {
+    if (this._visibleEntitiesSortedIndices === null) {
+      let currentLineRenderIndex = 0;
+
+      this._visibleEntitiesSortedIndices = this.visibleEntitiesSorted.map((entity) => {
+        const { index } = entity;
+        let lineRenderIndex = null;
+
+        if (this.line && this.line[index]) {
+          lineRenderIndex = currentLineRenderIndex;
+          currentLineRenderIndex += 1;
+        }
+
+        return {
+          index,
+          lineRenderIndex,
+        };
+      });
+    }
+    return this._visibleEntitiesSortedIndices;
+  }
+
+  /**
+   * Getter that filters the real/dynamic entities to only return
+   * those configured to render as a line graph.
+   *
+   * @returns {Array<Object>} Array of dynamic line chart entities.
+   */
   get realEntitiesLines() {
     if (this._realEntitiesLines === null)
       this._realEntitiesLines = this.realEntities.filter(entity => entity.graph === 'line');
