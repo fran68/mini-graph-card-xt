@@ -56,6 +56,155 @@ const log = (message) => {
   console.warn(prefix, colorStyle, message);
 };
 
+/**
+ * Returns just the 'none' value for solid and stroke linecap for SVG.
+ *
+ * @returns {{lineStyle: string, strokeLinecap: string}}
+ *   Object containing the dasharray and linecap.
+ */
+const getSolidPattern = () => ({ lineStyle: 'none', strokeLinecap: 'butt' });
+
+/**
+ * Calculates a symmetrical dotted pattern for SVG stroke-dasharray.
+ * Uses a microscopic dash length to force subpixel rendering precision in the browser,
+ * eliminating trailing gaps for ANY line_width. Designed for stroke-linecap="round".
+ *
+ * @param {number} lineWidth - The thickness of the line in pixels.
+ * @param {number} width - The total length/width of the SVG path or line.
+ * @returns {{lineStyle: string, strokeLinecap: string}}
+ *   Object containing the dasharray and linecap.
+ */
+const getDotPattern = (lineWidth, width) => {
+  // A tiny length makes the browser render with absolute subpixel precision,
+  // while still forming a perfect circle due to stroke-linecap="round".
+  const dotLength = 0.001;
+
+  // Calculate how many gaps fit into the width using a golden-ratio spacing of 2.5
+  const gapCount = Math.floor(width / (2.5 * lineWidth));
+
+  // Distribute the remaining pixel remainder evenly across all gaps
+  const exactGap = (width - (gapCount + 1) * dotLength) / gapCount;
+
+  // Return a clean configuration object perfect for Lit templates
+  return {
+    lineStyle: `${dotLength} ${exactGap}`,
+    strokeLinecap: 'round',
+  };
+};
+
+/**
+ * Calculates a symmetrical dashed pattern string for SVG stroke-dasharray.
+ * Ensures the line starts and ends with a full, complete dash at the exact boundaries.
+ * Designed for stroke-linecap="butt".
+ *
+ * @param {number} lineWidth - The thickness of the line in pixels.
+ * @param {number} width - The total length/width of the SVG path or line.
+ * @returns {{lineStyle: string, strokeLinecap: string}}
+ *    Object containing the dasharray and linecap.
+ */
+const getDashPattern = (lineWidth, width) => {
+  const dashLength = lineWidth * 3; // Dash length is 3 times the thickness
+  const minGap = dashLength; // Gap is at least as long as the dash
+
+  // Symmetrical dashed lines always have exactly one more dash than gaps
+  const gapCount = Math.floor((width - dashLength) / (dashLength + minGap));
+  const exactGap = (width - (gapCount + 1) * dashLength) / gapCount;
+
+  return {
+    lineStyle: `${dashLength} ${exactGap}`,
+    strokeLinecap: 'butt',
+  };
+};
+
+/**
+ * Calculates a symmetrical dash-dot (dash, gap, dot, gap) pattern string.
+ * Ensures that the pattern starts with a full dash on the left boundary and
+ * ends with a full dash on the right boundary and where the "dot" is rendered as a
+ * precise square (length equals thickness)
+ *
+ * @param {number} lineWidth - The thickness of the line in pixels.
+ * @param {number} width - The total length/width of the SVG path or line.
+ * @returns {{lineStyle: string, strokeLinecap: string}}
+ *    Object containing the dasharray and linecap.
+ */
+const getDashDotPattern = (lineWidth, width) => {
+  const dashLength = lineWidth * 3; // Dash length is 3 times the thickness
+  const dotLength = lineWidth; // A square dash (length = thickness) acts as the "dot"
+  const baseGap = lineWidth * 2.5; // Visual gap spacing based on line thickness
+
+  // One full period consists of: [Dash, Gap, Dot, Gap]
+  // To end with a Dash on the right edge, the total line length must fit:
+  // (N * PeriodLength) + DashLength
+  const periodLength = dashLength + baseGap + dotLength + baseGap;
+  const periodCount = Math.floor((width - dashLength) / periodLength);
+
+  // Distribute the remaining pixel remainder evenly across all gaps in the pattern
+  const totalGapsCount = periodCount * 2;
+  const usedPatternWidth = (periodCount * (dashLength + dotLength)) + dashLength;
+  const exactGap = (width - usedPatternWidth) / totalGapsCount;
+
+  return {
+    lineStyle: `${dashLength} ${exactGap} ${dotLength} ${exactGap}`,
+    strokeLinecap: 'butt',
+  };
+};
+
+/**
+ * A registry tracking the available SVG line style generation strategies.
+ * Maps style identifiers to their corresponding pattern calculator functions.
+ *
+ * Each mapped function expects `(lineWidth: number, width: number)` as arguments
+ * and returns a standard configuration object containing the CSS properties.
+ *
+ * @type {Object.<string, function(number, number): {line_style: string, line_cap: string}>}
+ * @property {function} solid - Generates a continuous solid line configuration.
+ * @property {function} dotted - Generates a pixel-perfect, subpixel-precise circular dot pattern.
+ * @property {function} dashed - Generates a crisp, flat-edged dash pattern with a 3:1 ratio.
+ * @property {function} dashdot - Generates an alternating round dash-and-dot reference pattern.
+ */
+const lineStylesBase = {
+  solid: getSolidPattern,
+  dotted: getDotPattern,
+  dashed: getDashPattern,
+  dashdot: getDashDotPattern,
+};
+
+/**
+ * A dynamic Proxy wrapper around `lineStylesBase` acting as a fallback mechanism.
+ *
+ * If a known style preset (e.g., 'dotted', 'dashed') is requested, it delegates
+ * the call to the respective calculator function.
+ * If an unknown string or raw numeric pattern (e.g., '5 10 2 10') is passed from
+ * the YAML config, it acts as a passthrough, returning the raw string directly
+ * as the `dasharray` with default 'butt' linecaps.
+ *
+ * @type {Proxy.<typeof lineStylesBase>}
+ */
+const lineStyles = new Proxy(lineStylesBase, {
+  /**
+   * Intercepts property access on the line styles registry.
+   *
+   * @param {typeof lineStylesBase} target - The base line styles mapping object.
+   * @param {string} prop - The requested style name or raw dasharray string from config.
+   * @returns {function(number, number): {line_style: string, line_cap: string, l?: number
+   * , w?: number} | function(number, number): {dasharray: string, lineCap: string, l: number,
+   * w: number}}
+   *          A function that calculates or passes through the layout configuration.
+   */
+  get(target, prop) {
+    return prop in target
+      ? target[prop]
+      : (l, w) => (
+        {
+          lineStyle: prop,
+          strokeLinecap: 'butt',
+          l,
+          w,
+        }
+      );
+  },
+});
+
 const ensureObjectPath = (obj, pathArray) => {
   let current = obj;
 
@@ -257,6 +406,6 @@ export {
   getMin, getAvg, getMax, getMinMaxNumber,
   getTime, getMilli, getTimestamp, compress, decompress,
   getFirstDefinedItem, getFirstNumber,
-  fastHash, compareArray, log,
+  fastHash, compareArray, log, lineStyles,
   ensureObjectPath, normalizeItem,
 };

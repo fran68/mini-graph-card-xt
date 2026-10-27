@@ -1,4 +1,5 @@
 import {
+  lineStyles,
   ensureObjectPath, normalizeItem,
 } from './utils';
 import {
@@ -191,13 +192,14 @@ export default (config) => {
     allAxes.add(entityConf.y_axis);
     entityConf.line_width = normalizeEntity('line_width', 'number', DEFAULT_LINE_WIDTH, { number: { min: 0 } });
     entityConf.bar_spacing = normalizeEntity('bar_spacing', 'number', DEFAULT_BAR_SPACING, { number: { min: 0 } });
-    entityConf.line_style = normalizeEntity('line_style', 'string', DEFAULT_LINE_STYLE,
+    const lineStyle = normalizeEntity('line_style', 'string', DEFAULT_LINE_STYLE,
       {
         stringArr: ['solid', 'dotted', 'dashed', 'dashdot'],
         string: {
           regex: lineStyleRegex,
         },
       });
+    Object.assign(entityConf, lineStyles[lineStyle](entityConf.line_width, 500));
     entityConf.baseline = normalizeEntity('baseline', 'number', DEFAULT_BASELINE, { stringArr: ['top', 'bottom'] });
     entityConf.priority = normalizeEntity('priority', 'number', undefined, { number: { min: -100, max: 100 } });
     entityConf.show_label = normalizeEntity('show_label', 'boolean', false);

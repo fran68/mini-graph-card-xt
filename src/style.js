@@ -262,8 +262,6 @@ const style = css`
   .line--points[anim="false"],
   .line[anim="false"] {
     animation: pop .25s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
-    stroke-linecap: round;
-    stroke-linejoin: round;
   }
   .line--points[anim="true"] {
     opacity: 0;

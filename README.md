@@ -15,7 +15,7 @@
 >
 > * Add custom rendering [priority](#render-priority-of-graphs)
 > * Add baseline configuration options, see [baseline](#baseline--reference-lines)
-> * Add [styles](#line-styling) for lines
+> * Add [line style](#line-style-patterns) patterns.
 > * Update bar animation logic, make it baseline aware, implement [staggered waterfall effect](#bar-animate-horizontal)
 > * Add [custom labeling](#show-label) and [scale modes](#scale-mode)
 > * Add per-entity animate option (see `animate` in [entity section](#entities-object))
@@ -182,7 +182,7 @@ We recommend looking at the [Example usage section](#example-usage) to understan
 | baseline | number | `0` | NEXT_VERSION | Reference line for fills and bars. Visualizes deviations from this value.
 | line_baseline | number |  | NEXT_VERSION | Graph-specific override for the line reference line.
 | bar_baseline | number |  | NEXT_VERSION | Graph-specific override for the bar reference line.
-| line_style | string | `solid` | NEXT_VERSION | Set the styling of the line. Supports predefined styles (solid, dotted, dashdot) or a custom spatial pattern (e.g., 12 5 0.1 5).
+| <a id="line-style-global"></a>line_style | string | `solid` | NEXT_VERSION | Set the styling of the line. Supports predefined styles (solid, dotted, dashdot) or a custom spatial pattern (e.g., 12 5 0.1 5), see [line style](#line-style-patterns) patterns.
 | line_width | number | `5` | v0.0.1 | Set the thickness of the line.
 | line_color | string/list | `var(--accent-color)` | v0.0.1 | Set a custom color for the graph line, provide a list of colors for multiple graph entries.
 | color_thresholds | list |  | v0.2.3 | Set thresholds for dynamic graph colors, see [Line color object](#line-color-object).
@@ -226,7 +226,7 @@ properties of the Entity object detailed in the following table (as per `sensor.
 | animate | boolean | `false` | NEXT_VERSION | Override for the animation of `bar` or `line`.
 | bar_spacing | number |         |  | Override for the spacing between bars in bar graph.
 | baseline | number |         | NEXT_VERSION | Override for the baseline / reference line.
-| line_style | string |         | NEXT_VERSION | Override for the line style.
+| <a id="line-style-entity"></a>line_style | string |         | NEXT_VERSION | Override for the line style, see [line style](#line-style-patterns) patterns.
 | line_width | number |         |  | Override for a thickness of the line.
 | color | string |         |  | Set a custom color, overrides all other color options including thresholds.
 | unit | string |         |  | Set a custom unit of measurement, overrides `unit` set in base config (`''` value for an empty unit).
@@ -948,13 +948,61 @@ xtime_format:
 The value `ambient` for the show configuration option `fill` applies a bar gradient with a right-shifted focal point, featuring a bright highlight in light mode and a deep shadow in dark mode.
 
 
-#### Line styling
+### Line Style Patterns
 
-The `line_style` option allows you to fully customize how card lines are rendered. It can be applied globally under card options or overridden per entity for maximum flexibility.
+The `line_style` option allows you to customize how card lines are rendered. It can be applied [globally](#line-style-global) under card options or overridden [per entity](#line-style-entity).
 
-- Predefined Styles: Quickly switch between solid, dotted and dashdot.
-- Custom SVG Patterns: Pass any custom space-separated pattern (e.g., 12 5 0.1 5) utilizing native stroke-dasharray values.
-- Animations: Fully supports CSS animations applied directly to the line style for dynamic visual effects.
+- **Predefined Styles**: Switch between `solid`, `dotted`, `dashed` and `dashdot`. The default is `solid`.
+- **Custom SVG Patterns**: Pass any custom space-separated pattern (e.g., `12 5 0.1 5`) utilizing native stroke-dasharray values.
+- **Animations**: Supports CSS animations.
+
+![image](https://github.com/user-attachments/assets/50073482-ddae-4e61-9f24-cc1ed36b93d5)
+
+#### Example:
+
+```yaml
+type: custom:mini-graph-card-xt
+height: 240
+render_priority: custom
+entities:
+  - entity: sensor.temperature
+    name: Temperature
+    priority: 10                    # Render with priority 10 to overlap all static value lines
+    line_width: 5
+    show_label: true                # Display entity state
+    align_label: 101                # Positioned near the right edge
+    label_adaptive_color: true      # Label turns orange with the line
+  - static_value: 14
+    line_style: dashed              # Displays predefined line style `dashed`
+    show_label: true
+    align_label: 15
+    color: cornflowerblue
+  - static_value: 15
+    line_width: 3
+    line_style: dotted              # Displays predefined line style `dotted`
+    show_label: true
+    color: grey
+  - static_value: 16
+    line_style: dashdot             # Displays predefined line style `dashdot`
+    show_label: true
+    align_label: 15
+    color: crimson
+show:
+  icon: false
+  state: false
+  labels: true
+  legend: false
+hours_to_show: 48
+group_by: hour
+hour24: true
+line_width: 2
+y_axis:
+  primary:
+    min_bound_range: 4
+```
+
+
+**Note**: This component dynamically calculates pixel-perfect, symmetrical line patterns (`dotted`, `dashed`, and `dashdotted`) in dependance on the `line_width`.
 
 
 #### Render priority of graphs

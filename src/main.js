@@ -16,7 +16,6 @@ import {
   MAX_BARS,
   ICONS,
   UPDATE_PROPS,
-  LINE_STYLES,
   X, Y, V,
   ONE_HOUR,
   TIME_STEPS,
@@ -702,10 +701,7 @@ class MiniGraphCard extends LitElement {
 
     const entityConfig = this.config.entities[index];
     const lineWidth = entityConfig.line_width;
-    const { animate } = entityConfig;
-
-    const input = entityConfig.line_style;
-    const lineStyle = LINE_STYLES[input] || input.trim();
+    const { animate, lineStyle, strokeLinecap } = entityConfig;
 
     const animationDelay = animate ? `${renderIndex * 0.5}s` : '0s';
     const length = this.length[index];
@@ -743,7 +739,10 @@ class MiniGraphCard extends LitElement {
           .id=${index}
           anim=${anim}
           ?init=${mainInit}
-          style=${animate ? `animation-delay: ${animationDelay};` : ''}
+          style="
+            ${animate ? `animation-delay: ${animationDelay};` : ''}
+            stroke-linecap: ${strokeLinecap} !important;
+          "
           fill='none'
           stroke-dasharray=${strokeDasharray}
           stroke-dashoffset=${strokeDashoffset}

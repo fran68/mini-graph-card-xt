@@ -51,12 +51,6 @@ const DEFAULT_SHOW = {
   fill: true,
   points: 'hover',
 };
-const LINE_STYLES = {
-  dotted: '0.1 6',
-  dashed: '12 8',
-  dashdot: '12 8 0.1 8',
-  solid: 'none',
-};
 
 const X = 0;
 const Y = 1;
@@ -85,7 +79,6 @@ export {
   DEFAULT_COLORS,
   UPDATE_PROPS,
   DEFAULT_SHOW,
-  LINE_STYLES,
   X,
   Y,
   V,
