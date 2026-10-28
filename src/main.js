@@ -938,7 +938,7 @@ class MiniGraphCard extends LitElement {
       if (this.bar[index]) {
         return this.renderSvgBars(this.bar[index], index);
       }
-      if (this.line[index]) {
+      if (this.line[index] || this.fill[index]) {
         return [
           this.renderSvgFill(this.fill[index], index, lineRenderIndex),
           this.renderSvgFillRect(this.fill[index], index),

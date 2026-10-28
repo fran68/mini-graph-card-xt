@@ -191,6 +191,7 @@ export default (config) => {
     entityConf.y_axis = normalizeEntity('y_axis', undefined, 'primary', { stringArr: ['primary', 'secondary'] });
     allAxes.add(entityConf.y_axis);
     entityConf.line_width = normalizeEntity('line_width', 'number', DEFAULT_LINE_WIDTH, { number: { min: 0 } });
+    entityConf.show_line = normalizeEntity('show_line', 'boolean', true, { parentConfig: '' });
     entityConf.bar_spacing = normalizeEntity('bar_spacing', 'number', DEFAULT_BAR_SPACING, { number: { min: 0 } });
     const lineStyle = normalizeEntity('line_style', 'string', DEFAULT_LINE_STYLE,
       {
