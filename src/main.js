@@ -485,7 +485,7 @@ class MiniGraphCard extends LitElement {
           return html`
             <div class="graph__legend__item"
               @click=${e => this.handlePopup(e, this.entity[entity.index])}
-              @mouseenter=${() => this.setTooltip(entity.index, -1, this.getEntityState(entity.index), 'Current')}
+              @mouseenter=${() => this.setTooltip(entity.index, -1, this.getEntityState(entity.index), 'legend', 'Current')}
               @mouseleave=${() => (this.tooltip = {})}>
               ${this.renderIndicator(this.getEntityState(entity.index), entity.index)}
               <span class="ellipsis">${legend}</span>
@@ -907,7 +907,7 @@ class MiniGraphCard extends LitElement {
             --baseline-y: ${baselineY}px;
             --scale-y: ${scaleY};
           "
-          @mouseover=${() => this.setTooltip(index, i, bar.value)}
+          @mouseover=${() => this.setTooltip(index, i, bar.value, 'bar')}
           @mouseout=${() => (this.tooltip = {})}>
         </rect>`;
     });
@@ -916,7 +916,7 @@ class MiniGraphCard extends LitElement {
         class='bars'
         .id=${index}
         anim=${animate}
-        ?inactive=${this.tooltip.index !== undefined && this.tooltip.index !== index && show_inactive !== true}
+        ?inactive=${this.tooltip.index !== undefined && this.tooltip.index !== index && this.tooltip.source !== 'bar' && show_inactive !== true}
       >${items}</g>`;
   }
 
@@ -983,7 +983,7 @@ class MiniGraphCard extends LitElement {
    * @param {string} label - The label associated with the entity or data point.
    * @returns {void}
    */
-  setTooltip(index, pointIndex, value, label = null) {
+  setTooltip(index, pointIndex, value, source = null, label = null) {
     const {
       group_by,
       points_per_hour,
@@ -1019,6 +1019,7 @@ class MiniGraphCard extends LitElement {
       index,
       time: [start, end],
       pointIndex,
+      source,
       label,
     };
   }
