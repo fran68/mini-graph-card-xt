@@ -244,7 +244,7 @@ class MiniGraphCard extends LitElement {
       this.color = this.computeColor(
         this.tooltip.value !== undefined
           ? this.tooltip.value : this.getEntityState(0),
-        this.tooltip.entity || 0,
+        this.tooltip.index || 0,
       );
       return true;
     }
@@ -347,8 +347,8 @@ class MiniGraphCard extends LitElement {
 
   renderName() {
     if (!this.config.show.name) return;
-    const name = this.tooltip.entity !== undefined
-      ? this.computeName(this.tooltip.entity)
+    const name = this.tooltip.index !== undefined
+      ? this.computeName(this.tooltip.index)
       : this.config.name || this.computeName(0);
     const color = this.config.show.name_adaptive_color ? `opacity: 1; color: ${this.color};` : '';
 
@@ -364,7 +364,7 @@ class MiniGraphCard extends LitElement {
       return html`
         <div class="states flex" loc=${this.config.align_state}>
           ${this.renderState(0)}
-          <div class="states--secondary">${this.config.entities.map((entityConfig, i) => i > 0 && this.renderState(i) || '')}</div>
+          <div class="states--secondary">${this.config.entities.map((entityConfig, index) => index > 0 && this.renderState(index) || '')}</div>
           ${this.config.align_icon === 'state' ? this.renderIcon() : ''}
         </div>
       `;
@@ -374,39 +374,39 @@ class MiniGraphCard extends LitElement {
     return path.split('.').reduce((res, key) => res && res[key], obj);
   }
 
-  getEntityState(id) {
-    const entityConfig = this.config.entities[id];
-    if (entityConfig.show_graph === false) return this.entity[id].state;
+  getEntityState(index) {
+    const entityConfig = this.config.entities[index];
+    if (entityConfig.show_graph === false) return this.entity[index].state;
     if (this.config.show.state === 'last') {
-      return this.Graph[id].coords[this.Graph[id].coords.length - 1][V];
+      return this.Graph[index].coords[this.Graph[index].coords.length - 1][V];
     } else if (entityConfig.attribute) {
-      return this.getObjectAttr(this.entity[id].attributes, entityConfig.attribute);
+      return this.getObjectAttr(this.entity[index].attributes, entityConfig.attribute);
     } else {
-      return this.entity[id].state;
+      return this.entity[index].state;
     }
   }
 
-  renderState(id) {
-    const isPrimary = id === 0; // rendering main state element?
-    if (isPrimary || this.config.entities[id].show_state) {
-      const state = this.getEntityState(id);
+  renderState(index) {
+    const isPrimary = index === 0; // rendering main state element?
+    if (isPrimary || this.config.entities[index].show_state) {
+      const state = this.getEntityState(index);
       // use tooltip data for main state element, if tooltip is active
-      const { entity: tooltipEntity, value: tooltipValue } = this.tooltip;
-      const isTooltip = isPrimary && tooltipEntity !== undefined;
+      const { index: tooltipIndex, value: tooltipValue } = this.tooltip;
+      const isTooltip = isPrimary && tooltipIndex !== undefined;
       const value = isTooltip ? tooltipValue : state;
-      const entity = isTooltip ? tooltipEntity : id;
-      const entityConfig = this.config.entities[entity];
+      const entityIndex = isTooltip ? tooltipIndex : index;
+      const entityConfig = this.config.entities[entityIndex];
       return html`
         <div
           class="state ${!isPrimary && 'state--small'}"
-          @click=${e => this.handlePopup(e, this.entity[id])}
-          style=${entityConfig.state_adaptive_color ? `color: ${this.computeColor(value, entity)}` : ''}>
-          ${entityConfig.show_indicator ? this.renderIndicator(value, entity) : ''}
+          @click=${e => this.handlePopup(e, this.entity[index])}
+          style=${entityConfig.state_adaptive_color ? `color: ${this.computeColor(value, entityIndex)}` : ''}>
+          ${entityConfig.show_indicator ? this.renderIndicator(value, entityIndex) : ''}
           <span class="state__value ellipsis">
             ${this.computeState(value)}
           </span>
           <span class="state__uom ellipsis">
-            ${this.computeUom(entity)}
+            ${this.computeUom(entityIndex)}
           </span>
           ${isPrimary && this.renderStateTime() || ''}
         </div>
@@ -789,7 +789,7 @@ class MiniGraphCard extends LitElement {
     return svg`
       <circle
         class='line--point'
-        ?inactive=${this.tooltip.index !== point[3]}
+        ?inactive=${this.tooltip.pointIndex !== point[3]}
         style=${`--mcg-hover: ${color};`}
         stroke=${color}
         fill=${color}
@@ -816,8 +816,8 @@ class MiniGraphCard extends LitElement {
     const color = this.computeColor(this.entity[index].state, index);
     return svg`
       <g class='line--points'
-        ?tooltip=${this.tooltip.entity === index}
-        ?inactive=${this.tooltip.entity !== undefined && this.tooltip.entity !== index}
+        ?tooltip=${this.tooltip.index === index}
+        ?inactive=${this.tooltip.index !== undefined && this.tooltip.index !== index}
         ?init=${this.length[index]}
         anim=${this.config.animate && this.config.show.points !== 'hover'}
         style="animation-delay: ${this.config.animate ? `${renderIndex * 0.5 + 0.5}s` : '0s'}"
@@ -830,10 +830,10 @@ class MiniGraphCard extends LitElement {
 
   renderSvgGradient(gradients) {
     if (!gradients) return;
-    const items = gradients.map((gradient, i) => {
+    const items = gradients.map((gradient, index) => {
       if (!gradient) return;
       return svg`
-        <linearGradient id=${`grad-${this.id}-${i}`} gradientTransform="rotate(90)">
+        <linearGradient id=${`grad-${this.id}-${index}`} gradientTransform="rotate(90)">
           ${gradient.map(stop => svg`
             <stop stop-color=${stop.color} offset=${`${stop.offset}%`} />
           `)}
@@ -842,33 +842,33 @@ class MiniGraphCard extends LitElement {
     return svg`${items}`;
   }
 
-  renderSvgLineRect(line, i) {
+  renderSvgLineRect(line, index) {
     if (!line) return;
 
-    const { show_inactive } = this.config.entities[i];
-    const fill = this.gradient[i]
-      ? `url(#grad-${this.id}-${i})`
-      : this.computeColor(this.entity[i].state, i);
+    const { show_inactive } = this.config.entities[index];
+    const fill = this.gradient[index]
+      ? `url(#grad-${this.id}-${index})`
+      : this.computeColor(this.entity[index].state, index);
     return svg`
       <rect class='line--rect'
-        ?inactive=${this.tooltip.entity !== undefined && this.tooltip.entity !== i && show_inactive !== true}
-        id=${`rect-${this.id}-${i}`}
+        ?inactive=${this.tooltip.index !== undefined && this.tooltip.index !== index && show_inactive !== true}
+        id=${`rect-${this.id}-${index}`}
         fill=${fill} height="100%" width="100%"
-        mask=${`url(#line-${this.id}-${i})`}
+        mask=${`url(#line-${this.id}-${index})`}
       />`;
   }
 
-  renderSvgFillRect(fill, i) {
+  renderSvgFillRect(fill, index) {
     if (!fill) return;
-    const svgFill = this.gradient[i]
-      ? `url(#grad-${this.id}-${i})`
-      : this.computeColor(this.entity[i].state, i);
+    const svgFill = this.gradient[index]
+      ? `url(#grad-${this.id}-${index})`
+      : this.computeColor(this.entity[index].state, index);
     return svg`
       <rect class='fill--rect'
-        ?inactive=${this.tooltip.entity !== undefined && this.tooltip.entity !== i}
-        id=${`fill-rect-${this.id}-${i}`}
+        ?inactive=${this.tooltip.index !== undefined && this.tooltip.index !== index}
+        id=${`fill-rect-${this.id}-${index}`}
         fill=${svgFill} height="100%" width="100%"
-        mask=${`url(#fill-${this.id}-${i})`}
+        mask=${`url(#fill-${this.id}-${index})`}
       />`;
   }
 
@@ -916,7 +916,7 @@ class MiniGraphCard extends LitElement {
         class='bars'
         .id=${index}
         anim=${animate}
-        ?inactive=${this.tooltip.entity !== undefined && this.tooltip.entity !== index && show_inactive !== true}
+        ?inactive=${this.tooltip.index !== undefined && this.tooltip.index !== index && show_inactive !== true}
       >${items}</g>`;
   }
 
@@ -974,7 +974,16 @@ class MiniGraphCard extends LitElement {
     /* eslint-enable indent */
   }
 
-  setTooltip(entity, index, value, label = null) {
+  /**
+   * Calculates, formats, and updates the tooltip data for a specific graph data point.
+   *
+   * @param {number} index - The index of the current entity.
+   * @param {Object} pointIndex - The data point index (0 represents the oldest point).
+   * @param {*} value - The value to be displayed inside the tooltip for this point.
+   * @param {string} label - The label associated with the entity or data point.
+   * @returns {void}
+   */
+  setTooltip(index, pointIndex, value, label = null) {
     const {
       group_by,
       points_per_hour,
@@ -983,16 +992,16 @@ class MiniGraphCard extends LitElement {
     } = this.config;
 
     // omit first point
-    const offset = this.config.entities[entity].graph === 'bar' ? 1 : 0;
+    const offset = this.config.entities[index].graph === 'bar' ? 1 : 0;
 
     // time units in milliseconds in this function
     const interval = getMilli(1 / points_per_hour);
     const n_points = Math.ceil(hours_to_show * points_per_hour - offset);
 
-    // index is 0 (oldest) to n_points-1 (most recent ~= now)
+    // pointIndex is 0 (oldest) to n_points-1 (most recent ~= now)
     // count of intervals from now to end of bin
     // count is 0 (now) to n_points-1 (oldest)
-    const count = (n_points - 1) - index;
+    const count = (n_points - 1) - pointIndex;
 
     // offset end by a minute, if grouped by, e.g., date or hour
     const oneMinute = group_by !== 'interval' ? 60000 : 0;
@@ -1007,9 +1016,9 @@ class MiniGraphCard extends LitElement {
     this.tooltip = {
       value,
       count,
-      entity,
-      time: [start, end],
       index,
+      time: [start, end],
+      pointIndex,
       label,
     };
   }
@@ -1078,7 +1087,7 @@ class MiniGraphCard extends LitElement {
 
       return html`
         <span class="label__custom"
-          ?inactive=${this.tooltip.entity !== undefined && this.tooltip.entity !== index && show_inactive !== true}
+          ?inactive=${this.tooltip.index !== undefined && this.tooltip.index !== index && show_inactive !== true}
           style="
             --custom-label-top: ${safeTopPercent}%;
             --custom-label-left: ${leftPercent}%;
