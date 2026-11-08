@@ -1193,23 +1193,6 @@ class MiniGraphCard extends LitElement {
   }
 
   /**
-   * Getter that filters out static value entities unless they are
-   * explicitly configured with a 'fit' scale mode.
-   *
-   * @returns {Array<Object>} Array of dynamic or scaled entities.
-   */
-  get realEntities() {
-    if (this._realEntities === null)
-      this._realEntities = this.visibleEntities.filter((entity) => {
-        const isStatic = typeof entity.static_value === 'number';
-        if (!isStatic) return true;
-
-        return entity.scale_mode === 'fit';
-      });
-    return this._realEntities;
-  }
-
-  /**
    * Getter that maps visible entities to their sorted indices and calculates line render order.
    * Caches the computed index mapping array to optimize re-renders and animation staggering.
    *
@@ -1238,43 +1221,32 @@ class MiniGraphCard extends LitElement {
   }
 
   /**
-   * Getter that filters the real/dynamic entities to only return
+   * Getter that filters the real entities to only return
    * those configured to render as a line graph.
    *
    * @returns {Array<Object>} Array of dynamic line chart entities.
    */
   get realEntitiesLines() {
-    if (this._realEntitiesLines === null)
-      this._realEntitiesLines = this.realEntities.filter(entity => entity.graph === 'line');
+    if (this._realEntitiesLines === null) {
+      this._realEntitiesLines = this.visibleEntities
+        .filter(entity => typeof entity.static_value !== 'number'
+          && entity.graph === 'line');
+    }
     return this._realEntitiesLines;
   }
 
   get primaryYaxisEntities() {
     if (this._primaryYaxisEntities === null) {
-      this._primaryYaxisEntities = this.realEntities.filter(
-        entity => entity.y_axis === 'primary',
-      );
-
-      if (this._primaryYaxisEntities.length === 0) {
-        this._primaryYaxisEntities = this.visibleEntities.filter(
-          entity => entity.y_axis === 'primary',
-        );
-      }
+      this._primaryYaxisEntities = this.visibleEntities
+        .filter(entity => entity.scale_mode === 'fit' && entity.y_axis === 'primary');
     }
     return this._primaryYaxisEntities;
   }
 
   get secondaryYaxisEntities() {
     if (this._secondaryYaxisEntities === null) {
-      this._secondaryYaxisEntities = this.realEntities.filter(
-        entity => entity.y_axis === 'secondary',
-      );
-
-      if (this._secondaryYaxisEntities.length === 0) {
-        this._secondaryYaxisEntities = this.visibleEntities.filter(
-          entity => entity.y_axis === 'secondary',
-        );
-      }
+      this._secondaryYaxisEntities = this.visibleEntities
+        .filter(entity => entity.scale_mode === 'fit' && entity.y_axis === 'secondary');
     }
     return this._secondaryYaxisEntities;
   }

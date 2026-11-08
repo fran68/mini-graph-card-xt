@@ -11,13 +11,13 @@
 >
 > ## History
 >
-> ### xt-0.6.x (2026-XX-XX)
+> ### xt-0.6.x (2026-11-08)
 >
 > * Add custom rendering [priority](#render-priority-of-graphs)
 > * Add baseline configuration options, see [baseline](#baseline--reference-lines)
-> * Add [line style](#line-style-patterns) patterns.
+> * Add [line style](#line-style-patterns) patterns
 > * Update bar animation logic, make it baseline aware, implement [staggered waterfall effect](#bar-animate-horizontal)
-> * Add [custom labeling](#show-label) and [scale modes](#scale-mode)
+> * Add [custom labeling](#custom-labeling) and [scaling modes](#scaling-modes)
 > * Add per-entity animate option (see `animate` in [entity section](#entities-object))
 > * Add per-entity and show option for `inactive` behavior of graphs (see [Visualizing Inactive States during Hover](#visualizing-inactive-states-during-hover))
 > * Revise [Cubic Bézier curve](#cubic-bézier-curve) to prevent lines from 'overshooting'
@@ -176,12 +176,10 @@ We recommend looking at the [Example usage section](#example-usage) to understan
 | show | list |  | v0.2.0 | List of UI elements to display/hide, for available items see [available show options](#available-show-options).
 | animate | boolean | `false` | v0.2.0 | Add a reveal animation to the graph.
 | height | number | `150` | v0.0.1 | Set a custom height of the line graph.
-| <a id="bar-animate-horizontal">bar_animate_horizontal</a> | number | `0` | NEXT_VERSION | Set a staggered delay for horizontal bar animation (e.g. 0.1).
+| <a id="bar-animate-horizontal"></a>bar_animate_horizontal | number | `0` | NEXT_VERSION | Set a staggered delay for horizontal bar animation (e.g. 0.1).
 | bar_spacing | number | `4` | v0.9.0 | Set the spacing between bars in bar graph.
 | bar_spacing_group | number | `0` | xt-v0.3.0 | Set an additional spacing between bar groups (multiple entities) in bar graph.
 | baseline | number | `0` | NEXT_VERSION | Reference line for fills and bars. Visualizes deviations from this value.
-| line_baseline | number |  | NEXT_VERSION | Graph-specific override for the line reference line.
-| bar_baseline | number |  | NEXT_VERSION | Graph-specific override for the bar reference line.
 | <a id="line-style-global"></a>line_style | string | `solid` | NEXT_VERSION | Set the styling of the line. Supports predefined styles (solid, dotted, dashdot) or a custom spatial pattern (e.g., 12 5 0.1 5), see [line style](#line-style-patterns) patterns.
 | line_width | number | `5` | v0.0.1 | Set the thickness of the line.
 | line_color | string/list | `var(--accent-color)` | v0.0.1 | Set a custom color for the graph line, provide a list of colors for multiple graph entries.
@@ -200,16 +198,16 @@ We recommend looking at the [Example usage section](#example-usage) to understan
 | lower_bound_secondary | number *or* string |  | v0.5.0 | Set a fixed lower bound for the graph secondary Y-axis. String value starting with ~ (e.g. `~50`) specifies soft bound.
 | upper_bound_secondary | number *or* string |  | v0.5.0 | Set a fixed upper bound for the graph secondary Y-axis. String value starting with ~ (e.g. `~50`) specifies soft bound.
 | min_bound_range_secondary | number |  | v0.x.x | Applied after everything, makes sure there's a minimum range that the secondary Y-axis will have. Useful for not making small changes look large because of scale.
-| <a id="smoothing">smoothing</a> | boolean or string | `true` | v0.8.0 | Whether to make graph line smooth. Use `cubic` to describe a line by a Cubic Bezier curve (see [Cubic Bézier curve](#cubic-bézier-curve)).
+| <a id="smoothing"></a>smoothing | boolean or string | `true` | v0.8.0 | Whether to make graph line smooth. Use `cubic` to describe a line by a Cubic Bezier curve (see [Cubic Bézier curve](#cubic-bézier-curve)).
 | state_map | [state map object](#state-map-object) |  | v0.8.0 | List of entity states to convert (order matters as position becomes a value on the graph).
 | value_factor | number | 0 | v0.9.4 | Scale value by order of magnitude (e.g. convert Watts to kilo Watts), use negative value to scale down.
 | logarithmic | boolean | `false` | v0.10.0 | Use a Logarithmic scale for the graph
 | margin_x | number |  | NEXT_VERSION | Set custom X-axis margin (in pixels). Overrides the auto-calculated horizontal padding.
 | margin_y | number |  | NEXT_VERSION | Set custom Y-axis margin (in pixels). Overrides the auto-calculated vertical padding. Set to 0 to hide the minimal height offset on zero-value bars.
-| render_priority | string |  | NEXT_VERSION | Controls the [sorting order](#render-priority-of-graphs) of the graphs.
-| x_scale | number | `10` | xt-v0.2.0 | Set maximum number of X-axis labels, ticks or grid lines (marks).
-| x_major_breaks | number | `4` | xt-v0.2.0 | Display major (thick) label, tick and grid line every n-th mark.
-| x_format | list |  | xt-v0.2.0 | Set time format for X-axis.
+| <a id="render-priority"></a>render_priority | string |  | NEXT_VERSION | Controls the [sorting order](#render-priority-of-graphs) of the graphs, `reverse` or `custom`.
+| <a id="x-scale"></a>x_scale | number | `10` | xt-v0.2.0 | Set maximum number of X-axis labels, ticks or grid lines (marks), see [X-axis labels and gridlines](#labels-ticks-and-grid-lines-for-x-axis).
+| <a id="x-major-breaks"></a>x_major_breaks | number | `4` | xt-v0.2.0 | Display major (thick) label, tick and grid line every n-th mark, see [X-axis labels and gridlines](#labels-ticks-and-grid-lines-for-x-axis).
+| <a id="x-format"></a>x_format | list |  | xt-v0.2.0 | Set time format for X-axis, see [X-axis labels and gridlines](#labels-ticks-and-grid-lines-for-x-axis).
 
 
 #### Entities object
@@ -231,7 +229,7 @@ properties of the Entity object detailed in the following table (as per `sensor.
 | color | string |         |  | Set a custom color, overrides all other color options including thresholds.
 | unit | string |         |  | Set a custom unit of measurement, overrides `unit` set in base config (`''` value for an empty unit).
 | aggregate_func | string |         |  | Override for aggregate function used to calculate point on the graph, `avg`, `median`, `min`, `max`, `first`, `last`, `sum`.
-| priority | number |   `0`   | NEXT_VERSION | The [rendering priority](#render-priority-of-graphs) for this line. Only effective when card option `render_priority` is set to `custom`. Range is between `-100` and `100`.
+| <a id="priority"></a>priority | number |   `0`   | NEXT_VERSION | The [rendering priority](#render-priority-of-graphs) for this line. Only effective when card option `render_priority` is set to `custom`. Range is between `-100` and `100`. Default is `0`.
 | stack | string |         |  | Use with any group name to combine entities into a single stack.
 | show_state | boolean |         |  | Display the current state.
 | show_legend_state | boolean |  false  |  | Display the current state as part of the legend.
@@ -245,11 +243,11 @@ properties of the Entity object detailed in the following table (as per `sensor.
 | state_adaptive_color | boolean |         |  | Make the color of the state adapt to the entity color.
 | y_axis | string |         |  | If 'secondary', displays using the secondary y-axis on the right.
 | fixed_value | boolean |         |  | Set to true to graph the entity's current state as a fixed value instead of graphing its state history.
-| <a id="entity-smoothing">smoothing</a> | boolean or string |         |  | Override for a flag indicating whether to make graph line smooth. Use `cubic` to describe a line by a cubic Bezier curve (see [Cubic Bézier curve](#cubic-bézier-curve)).
-| <a id="show-label">show_label</a> | boolean | `false` | NEXT_VERSION | Display a persistent floating label showing the current state of this specific entity on the graph, see [Custom Labeling](#custom-labeling--scaling-modes).
-| align_label | number | `0` (primary)<br>`100` (secondary) | NEXT_VERSION | Horizontal position of the custom label in percent (`0` for far left, `100` for far right). Labels maintain a safe visual margin from the edges, minimum and maximum labels.
-| label_adaptive_color | boolean | `false` | NEXT_VERSION | When enabled, the custom label's text color dynamically changes to match the current color state of the entity.
-| <a id="scale-mode">scale_mode</a> | string | `clip` | NEXT_VERSION | Controls how this entity affects the Y-axis auto-scaling boundaries. Especially useful for static thresholds, see [Scaling Modes](#custom-labeling--scaling-modes).<br>• `clip`: The entity is ignored during bounds calculation and will be visually clipped/hidden if outside the active data view.<br>• `fit`: Forces the Y-axis to expand so that this entity is guaranteed to be fully visible.<br>• `strict`: *Reserved for future implementation.*
+| <a id="entity-smoothing"></a>smoothing | boolean or string |         |  | Override for a flag indicating whether to make graph line smooth. Use `cubic` to describe a line by a cubic Bezier curve (see [Cubic Bézier curve](#cubic-bézier-curve)).
+| <a id="show-label"></a>show_label | boolean | `false` | NEXT_VERSION | Display a persistent floating label showing the current state of this specific entity on the graph, see [Custom Labeling](#custom-labeling).
+| <a id="align-label"></a>align_label | number | `0` (primary)<br>`100` (secondary) | NEXT_VERSION | Horizontal position of the custom label in percent (`-1` for far left, `101` for far right). Labels maintain a safe visual margin from the edges, minimum and maximum labels, see [Custom Labeling](#custom-labeling).
+| <a id="label-adaptive-color"></a>label_adaptive_color | boolean | `false` | NEXT_VERSION | When enabled, the custom label's text color dynamically changes to match the current color state of the entity, see [Custom Labeling](#custom-labeling).
+| <a id="scale-mode"></a>scale_mode | string | `clip` (static_value) | NEXT_VERSION | Controls how this entity affects the Y-axis auto-scaling boundaries. Especially useful for static thresholds, see [Scaling Modes](#scaling-modes).
 
 ```yaml
 entities:
@@ -276,14 +274,14 @@ All properties are optional.
 | extrema | `false` | `true` / `false` |  | Display max/min information.
 | labels | `hover` | `true` / `false` / `hover` |  | Display Y-axis labels.
 | labels_secondary | `hover` | `true` / `false` / `hover` |  | Display secondary Y-axis labels.
-| <a id="inactive">inactive</a> | `false` | `true` / `false` | NEXT_VERSION | If set to `true`, all graph entities remain visible when hovering over a specific bar or line point, instead of being hidden (see [Visualizing Inactive States during Hover](#visualizing-inactive-states-during-hover)).
+| <a id="inactive"></a>inactive | `false` | `true` / `false` | NEXT_VERSION | If set to `true`, all graph entities remain visible when hovering over a specific bar or line point, instead of being hidden (see [Visualizing Inactive States during Hover](#visualizing-inactive-states-during-hover)).
 | name_adaptive_color | `false` | `true` / `false` |  | Make the name color adapt with the primary entity color.
 | icon_adaptive_color | `false` | `true` / `false` |  | Make the icon color adapt with the primary entity color.
 | loading_indicator | `true` | `true` / `false` |  | Show loading indicator while attempting to retrieve a history.
-| x_labels | `false` | `true` / `false` |  | Display X-axis labels with horizontal line and ticks.
-| x_labels_inline | `false` | `true` / `false` |  | Display X-axis labels within the graph area. Only valid when x_labels is enabled.
-| x_labels_fill | `false` | `true` / `false` |  | Stretch the fill into the label area. Only valid when x_labels is enabled and labels are not inline.
-| x_lines | `false` | `true` / `false` |  | Display X-axis grid lines.
+| <a id="x-labels"></a>x_labels | `false` | `true` / `false` |  | Display X-axis labels with horizontal line and ticks, see [X-axis labels and gridlines](#labels-ticks-and-grid-lines-for-x-axis).
+| <a id="x-labels-inline"></a>x_labels_inline | `false` | `true` / `false` |  | Display X-axis labels within the graph area, see [X-axis labels and gridlines](#labels-ticks-and-grid-lines-for-x-axis). Only valid when x_labels is enabled.
+| <a id="x-labels-fill"></a>x_labels_fill | `false` | `true` / `false` |  | Stretch the fill into the label area, see [X-axis labels and gridlines](#labels-ticks-and-grid-lines-for-x-axis). Only valid when x_labels is enabled and labels are not inline.
+| <a id="x-lines"></a>x_lines | `false` | `true` / `false` |  | Display X-axis grid lines, see [X-axis labels and gridlines](#labels-ticks-and-grid-lines-for-x-axis).
 
 
 #### Line color object
@@ -688,11 +686,13 @@ entities:
 ```
 ![image](https://github.com/ildar170975/mini-graph-card/assets/71872483/eebd0cea-da93-4bf5-97a1-118edd2a9c5e)
 
-#### Labels, ticks and grid lines for X-axis
+### Labels, ticks and grid lines for X-axis
+
+You can add [timescale/labels](#x-labels) and [gridlines](#x-lines) for the X-axis. See ([docs](../docs/README_x_axis.md)).
 
 ![image](https://github.com/user-attachments/assets/a7104e10-d235-453b-86e1-e537aa8cbbf0)
 
-You can add labels and grid lines for the X-axis.
+#### Example:
 
 ```yaml
 type: custom:mini-graph-card-xt
@@ -707,7 +707,8 @@ hours_to_show: 60
 group_by: hour
 ```
 
-#### Lines with static value
+
+### Lines with static value
 
 ![image](https://github.com/user-attachments/assets/f6083986-92d2-4cb2-9424-f2164dbd4312)
 
@@ -724,11 +725,9 @@ type: custom:mini-graph-card-xt
     line_style: dashed
     line_width: 2
     color: teal
-    show_fill: false
   - static_value: 30
     line_width: 2
     color: rgba(from darkgrey r g b / 0.5)
-    show_fill: false
 line_width: 4
 show:
   state: last
@@ -737,7 +736,7 @@ show:
 ```
 
 
-#### Lines and Bars
+### Lines and Bars
 
 ![image](https://github.com/user-attachments/assets/19a4521d-a5be-4de8-b4b1-1cf8b46aa33e)
 
@@ -770,7 +769,7 @@ group_by: hour
 Example: The graph type defaults to `line` and there is no global graph configuration under the `show:` option. By defining the graph type explicitly for the second entity the graph is drawn as a `bar`.  
 
 
-#### Baseline / Reference Lines
+### Baseline / Reference Lines
 
 The baseline feature allows bars with negative values to be drawn. Bars fill the area between their values and the baseline, which is the zero line by default. 
 
@@ -787,7 +786,6 @@ Configuration is highly flexible and can be defined at three levels. If multiple
 - Global: Applies to the entire card (baseline) - *Lowest*
 - Graph Type Specific: Targets lines or bars individually (line_baseline / bar_baseline)
 - Per-Entity: Overrides the baseline for a specific entity (baseline) - *Highest*
-
 
 
 ### Cubic Bézier Curve
@@ -848,7 +846,7 @@ xtime_format:
 ```
 
 
-#### Stacked overlaid Bars
+### Grouped overlaid Bars
 
 This extends the way transparent line fills are visually layered to bars. Instead of sitting side-by-side within the same time slot, the bars are rendered directly behind one another.
 
@@ -878,7 +876,7 @@ bar_spacing: 4
 group_by: date
 ```
 
-#### Multiple stacked bar groups
+### Multiple overlaid Bar groups
 
 Multiple stack groups can be created to sit side-by-side within a single time slot, and each group is unique to its respective Y-axis.
 
@@ -943,9 +941,56 @@ xtime_format:
 ```
 
 
-#### Adaptive ambient style
+### Render priority of graphs
 
-The value `ambient` for the show configuration option `fill` applies a bar gradient with a right-shifted focal point, featuring a bright highlight in light mode and a deep shadow in dark mode.
+By default, graphs are rendered in the order they are defined in the configuration, regardless of whether they are line or bar graphs. To control which lines or bars overlap each other, you can use the custom rendering priority feature. Lines with a higher priority value are rendered last, meaning they will be drawn on top of lines with lower priority (similar to how a CSS z-index works). Set the card option `render_priority` to `custom` to sort by entity option `priority`, or `reverse` to invert the default order.
+
+- **Reverse Render Order**: Use `reverse` as [render_priority](#render-priority) to invert the order defined in the configuration.
+- **Custom Render Order**: Use `custom` [render_priority](#render-priority) along with the entity level [priority](#priority) option to control the order.
+
+The legend alignment automatically adapts to the selected sorting method for both new configuration options; graphs with a higher rendering order will be listed first (in descending order).
+
+Note: The old configuration logic drew all lines first, followed by all bars, and finally the points. This made it impossible to render lines on top of bars.
+
+#### Example:
+
+![image](https://github.com/user-attachments/assets/454bdd6d-00e9-47c5-b4a6-963de6522d61)
+
+```yaml
+type: custom:mini-graph-card-xt
+name: Temperature and Humidity
+height: 250
+render_priority: custom            # Enable custom render priority
+entities:
+  - entity: sensor.temperature
+    name: Temperature
+    show_fill: false
+    priority: 10                   # Set priority to `10` to draw on top of humidity bar graph
+  - entity: sensor.humidity
+    name: Humidity
+    show_state: true
+    graph: bar
+    color: rgba(from rgb(72 143 294) r g b / 0.8)
+    y_axis: secondary
+  - static_value: 60
+    priority: -10                  # Set priority to `-10` to be overlapped by all other graphs
+    line_width: 2
+    line_style: dotted
+    color: grey
+    show_label: true
+    align_label: 82
+    label_adaptive_color: true
+    y_axis: secondary
+show:
+  icon: false
+  legend: false
+  labels: true
+  labels_secondary: true
+hours_to_show: 12
+group_by: hour
+```
+
+In the example a threshold is drawn first as a static value, followed by an entity shown as bars, and a line overlaying both.
 
 
 ### Line Style Patterns
@@ -1001,41 +1046,18 @@ y_axis:
     min_bound_range: 4
 ```
 
-
 **Note**: This component dynamically calculates pixel-perfect, symmetrical line patterns (`dotted`, `dashed`, and `dashdotted`) in dependance on the `line_width`.
 
 
-#### Render priority of graphs
+### Custom Labeling
 
-By default, graphs are rendered in the order they are defined in the configuration, regardless of whether they are line or bar graphs. To control which lines overlap each other, you can use the custom rendering priority feature. Lines with a higher priority value are rendered last, meaning they will be drawn on top of lines with lower priority (similar to how a CSS z-index works). Set this option to `custom` to sort by entity priority, or `reverse` to invert the default order. The legend alignment automatically adapts to the selected sorting method for both new configuration options; graphs with a higher rendering order will be listed first (in descending order).
+Custom labeling allows to display entity value labels and introduces custom label position control and adaptive colors.
 
-Note: The old configuration logic drew all lines first, followed by all bars, and finally the points. This made it impossible to render lines on top of bars.
+- Custom Labels ([show_label](#show-label)): Individual labels can be activated per entity. The displayed value depends on the `state` configuration under `show` and can be activated for static_value lines and real entities as well.
+- Label Posioning ([align_label](#align-label)): Labels can be positioned horizontally on the X-axis.
+- Adaptive Color Sync ([label_adaptive_color](#label-adaptive-color)): Labels can automatically inherit the dynamic state color of their respective entity, providing visual cohesion with line thresholds.
 
-In the example the first entity displays only its state value in the header. A baseline is drawn first as a static value, followed by an entity shown as bars, and a line overlaying both.
-
-
-#### Margins
-
-Graph margins are determined by the line width to ensure that lines, borders, and hover points are not clipped at the edges. Bars previously inherited this padding logic.
-
-Since lines and bars can now be drawn simultaneously, the padding behavior has been updated to handle mixed graph types gracefully and keep their margins aligned:
-
-- Lines-only: Margins default to the maximum `line_width` of all entities (Exception: X-margin is set to 0 when fill is enabled).
-- Bars-only: Margins default to a fixed fallback value (`DEFAULT_MARGIN = 5`).
-- Mixed (Lines & Bars): Margins follow the `line_width` to keep the bars aligned perfectly with the lines.
-
-The margin implementation extends the graph area for lines and bars by the margin. For bars this causes a small bar stub to appear even when a sensor value is exactly 0. To fix this, the new configuration option `margin_y` is introduced. Setting `margin_y: 0` removes this artificial extension for bar graphs completely (forcing an exact zero-baseline) for signed bars (only positive or negative values), with the acknowledged trade-off that regular lines might get slightly clipped at the top/bottom boundaries if both types are combined. Furthermore, an override also for the X-margin is possible.
-
-
-### Custom Labeling & Scaling Modes
-
-This update introduces advanced custom label position control, adaptive colors, and smart axis scaling constraints for chart entities. This gives users full control over how threshold lines, static limits, and individual sensor value labels are displayed and how they impact the chart's overall Y-axis boundaries.
-
-- Dynamic Custom Labels (`show_label`): Individual labels can now be activated per entity and precisely positioned horizontally on the X-axis (`align_label`: `0%` to `100%`).
-- Adaptive Color Sync (`label_adaptive_color`): Labels can automatically inherit the dynamic state color of their respective entity, providing visual cohesion with line thresholds.
-- Smart Scaling Policies (`scale_mode`): Resolves the common issue where static helper lines or threshold constants forcefully compress or distort the chart view. Users can now choose whether a line should expand the axis view (`fit`) or run quietly in the background without altering the main data scale (`clip`).
-
-##### Example:
+#### Example:
 
 ```yaml
 type: custom:mini-graph-card-xt
@@ -1056,6 +1078,31 @@ entities:
     scale_mode: fit                # Graph always stays zoomed out enough to show this baseline
 ```
 
+
+### Scaling Modes
+
+The scaling mode gives control over how threshold lines, static limits are displayed and how they impact the chart's overall Y-axis boundaries. With the scaling policy the common issue is resolved where static value lines forcefully compress or distort the chart view. Users can now choose on a per-entity level whether a line should expand the axis view or run quietly in the background without altering the main data scale:
+
+- Scaling mode ([scale_mode](#scale-mode)): With `clip` set the entity is ignored during bounds calculation and will be visually clipped/hidden if outside the active data view. This is the default setting for static value entities. The setting `fit` forces the Y-axis to expand so that this entity is guaranteed to be fully visible.
+
+An example is given in [Custom Labeling](#custom-labeling).
+
+Note: You can also set the `scale_mode` for a real entity. The default is `fit`. Otherwise the lines are clipped at the calculated lower and upper boundaries.
+
+
+### Margins
+
+Graph margins are determined by the line width to ensure that lines, borders, and hover points are not clipped at the edges. Bars previously inherited this padding logic.
+
+Since lines and bars can now be drawn simultaneously, the padding behavior has been updated to handle mixed graph types gracefully and keep their margins aligned:
+
+- Lines-only: Margins default to the maximum `line_width` of all entities (Exception: X-margin is set to 0 when fill is enabled).
+- Bars-only: Margins default to a fixed fallback value (`DEFAULT_MARGIN = 5`).
+- Mixed (Lines & Bars): Margins follow the `line_width` to keep the bars aligned perfectly with the lines.
+
+The margin implementation extends the graph area for lines and bars by the margin. For bars this causes a small bar stub to appear even when a sensor value is exactly 0. To fix this, the new configuration option `margin_y` is introduced. Setting `margin_y: 0` removes this artificial extension for bar graphs completely (forcing an exact zero-baseline) for signed bars (only positive or negative values), with the acknowledged trade-off that regular lines might get slightly clipped at the top/bottom boundaries if both types are combined. Furthermore, an override also for the X-margin is possible.
+
+
 ### Visualizing Inactive States during Hover
 
 By default, when you hover over a specific graph or bar, all other entities/series in the card are dimmed or hidden to highlight the selected data point/line or bar.
@@ -1065,6 +1112,10 @@ With the new `inactive` options, you can change this behavior so that lines or b
 - **Per-entity control:** Use the entity-level [show_inactive](#show-inactive) option to override the global setting for specific entities (e.g., keeping a critical baseline visible, or hiding a single entity while others stay up).
 - **Priority:** The per-entity configuration always takes precedence over the global option.
 
+
+### Adaptive ambient style
+
+The value `ambient` for the show configuration option `fill` applies a bar gradient with a right-shifted focal point, featuring a bright highlight in light mode and a deep shadow in dark mode.
 
 
 ## Development

@@ -173,7 +173,8 @@ export default (config) => {
 
     entityConf.index = index;
 
-    if (typeof entityConf.static_value === 'number') {
+    const isStatic = typeof entityConf.static_value === 'number';
+    if (isStatic) {
       // Fallback generation if YAML contains no real entity ID
       if (!entityConf.entity)
         entityConf.entity = `sensor.virtual_static_value_${entityConf.static_value}_${index}`;
@@ -206,9 +207,12 @@ export default (config) => {
     entityConf.show_label = normalizeEntity('show_label', 'boolean', false);
     entityConf.align_label = normalizeEntity('align_label', 'number', undefined, { number: { min: -1, max: 101 } });
     entityConf.label_adaptive_color = normalizeEntity('label_adaptive_color', 'boolean', false);
-    entityConf.scale_mode = normalizeEntity('scale_mode', undefined, 'clip', { stringArr: ['clip', 'fit'] });
+    const defaultScaleMode = isStatic ? 'clip' : 'fit';
+    entityConf.scale_mode = normalizeEntity('scale_mode', undefined, defaultScaleMode, { stringArr: ['clip', 'fit'] });
     entityConf.animate = normalizeEntity('animate', 'boolean', false);
     entityConf.show_inactive = normalizeEntityShow('show_inactive', 'boolean', false, { parentItem: 'inactive' });
+    entityConf.show_fill = normalizeEntity('show_fill', 'boolean', !isStatic, { parentConfig: '' });
+    entityConf.show_points = normalizeEntity('show_points', 'boolean', !isStatic, { parentConfig: '' });
 
     return entityConf;
   });
