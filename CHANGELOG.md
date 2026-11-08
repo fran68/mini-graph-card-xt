@@ -1,3 +1,37 @@
+# [0.6.0](https://github.com/fran68/mini-graph-card-xt/compare/xt-v0.5.0...xt-v0.6.0) (2026-11-08)
+
+
+### Bug Fixes
+
+* horizontal_delay for bars after initial animation phase ([368add3](https://github.com/fran68/mini-graph-card-xt/commit/368add3661f9b678fdccd6dad883ae8a142b6ff5))
+* label position at the bottom with x-labels ([7b28f94](https://github.com/fran68/mini-graph-card-xt/commit/7b28f94eafc1aec51dc4d2e564a31b20133a28d0))
+* line animation ([f21a774](https://github.com/fran68/mini-graph-card-xt/commit/f21a77471643a10b80e8dc1c579f7545cdb96702))
+* line animation ([e77fd43](https://github.com/fran68/mini-graph-card-xt/commit/e77fd433acc5b4601b5784447e9bc674e53e8618))
+* multiple fixes ([d68c0ea](https://github.com/fran68/mini-graph-card-xt/commit/d68c0ea8f6307a78d10157a4907b1349982745b8))
+* remove line points for hidden entities, refactor renderSvg, renderIndex only for lines ([b160241](https://github.com/fran68/mini-graph-card-xt/commit/b1602412e0ba78c55338561f08f5ab79893b26c4))
+* render issue for fill when show_line is false ([f9764e5](https://github.com/fran68/mini-graph-card-xt/commit/f9764e588fdcfeaf1120659a93d59266e1909c82))
+* render order for points ([344c2e1](https://github.com/fran68/mini-graph-card-xt/commit/344c2e10bd3354d609d4c7957d61c92660114f82))
+* restore behavior for tooltip and bars ([eeec810](https://github.com/fran68/mini-graph-card-xt/commit/eeec81046de29b0065cca321600ddb13fce8de0e))
+* revise cubic bezier curve and prevent curve from overshooting ([aa7dce0](https://github.com/fran68/mini-graph-card-xt/commit/aa7dce0f5808d6917e717484d1ee4676885a5c79))
+* symmetrical line patterns ([dd86362](https://github.com/fran68/mini-graph-card-xt/commit/dd8636285b106836c4824835761a17fb9f18fc76))
+
+
+### Features
+
+* adapt inactive handling for graphs and refactor customLabels ([5f0b1c5](https://github.com/fran68/mini-graph-card-xt/commit/5f0b1c5822662e7c832275e1c0a3a00a69424790))
+* add custom baseline ([4ef72db](https://github.com/fran68/mini-graph-card-xt/commit/4ef72db74c847e6c36b7497e0d561db2580df5ee))
+* add custom label ([7194e9e](https://github.com/fran68/mini-graph-card-xt/commit/7194e9ef359c7928764ed0e8b7bf053987cc0f2e))
+* add custom margins ([bd02910](https://github.com/fran68/mini-graph-card-xt/commit/bd02910c498da41e236f3608328a4761be4e2fbb))
+* add custom render order ([935c83c](https://github.com/fran68/mini-graph-card-xt/commit/935c83c9b54942d1e9fde69249ca1ba91d9e70fa))
+* add line styles ([ac17412](https://github.com/fran68/mini-graph-card-xt/commit/ac1741212ac83d8eb929d5df708719a39da515a8))
+* add per-entity animate config option ([0ddd185](https://github.com/fran68/mini-graph-card-xt/commit/0ddd18568adb8de93fa7449bf4d055fd4c07b431))
+* normalize y axes ([4f5da65](https://github.com/fran68/mini-graph-card-xt/commit/4f5da65ea3f385c73ea1b2995fb6fd0e2daf8cb0))
+* revise scale_mode handling and change defaults for static value entities ([f2a84ee](https://github.com/fran68/mini-graph-card-xt/commit/f2a84eeacf51b3f445d597f66760c1da350927ac))
+* track the animation state for bars ([4e38c7c](https://github.com/fran68/mini-graph-card-xt/commit/4e38c7c2c294ea180424798b1e7b9410b0ad5996))
+* update bar animation ([b910f96](https://github.com/fran68/mini-graph-card-xt/commit/b910f96141bd4c562a9c175bf1c0af4267bb8a82))
+
+### Fork based on [mini-graph-card](https://github.com/kalkih/mini-graph-card.git), upstream version **0.13.0**
+
 # [0.5.0](https://github.com/fran68/mini-graph-card-xt/compare/xt-v0.4.1...xt-v0.5.0) (2026-08-05)
 
 

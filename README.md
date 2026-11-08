@@ -109,7 +109,7 @@ This card is available in [HACS](https://hacs.xyz/) (Home Assistant Community St
 2. Grab `mini-graph-card-xt-bundle.js`:
 
   ```console
-  $ wget https://github.com/fran68/mini-graph-card-xt/releases/download/xt-v0.5.0/mini-graph-card-xt-bundle.js
+  $ wget https://github.com/fran68/mini-graph-card-xt/releases/download/xt-v0.6.0/mini-graph-card-xt-bundle.js
   ```
 
 3. Add the resource reference as decribed below.
@@ -120,7 +120,7 @@ If you configure Lovelace via YAML, add a reference to `mini-graph-card-xt-bundl
 
   ```yaml
   resources:
-    - url: /local/mini-graph-card-xt-bundle.js?v=xt-v0.5.0
+    - url: /local/mini-graph-card-xt-bundle.js?v=xt-v0.6.0
       type: module
   ```
 
@@ -143,7 +143,7 @@ Else, if you prefer the graphical editor, use the menu to add the resource:
 
   ```yaml
   resources:
-    - url: /local/mini-graph-card-xt-bundle.js?v=xt-v0.5.0
+    - url: /local/mini-graph-card-xt-bundle.js?v=xt-v0.6.0
       type: module
   ```
 
@@ -176,11 +176,11 @@ We recommend looking at the [Example usage section](#example-usage) to understan
 | show | list |  | v0.2.0 | List of UI elements to display/hide, for available items see [available show options](#available-show-options).
 | animate | boolean | `false` | v0.2.0 | Add a reveal animation to the graph.
 | height | number | `150` | v0.0.1 | Set a custom height of the line graph.
-| <a id="bar-animate-horizontal"></a>bar_animate_horizontal | number | `0` | NEXT_VERSION | Set a staggered delay for horizontal bar animation (e.g. 0.1).
+| <a id="bar-animate-horizontal"></a>bar_animate_horizontal | number | `0` | xt-v0.6.0 | Set a staggered delay for horizontal bar animation (e.g. 0.1).
 | bar_spacing | number | `4` | v0.9.0 | Set the spacing between bars in bar graph.
 | bar_spacing_group | number | `0` | xt-v0.3.0 | Set an additional spacing between bar groups (multiple entities) in bar graph.
-| baseline | number | `0` | NEXT_VERSION | Reference line for fills and bars. Visualizes deviations from this value.
-| <a id="line-style-global"></a>line_style | string | `solid` | NEXT_VERSION | Set the styling of the line. Supports predefined styles (solid, dotted, dashdot) or a custom spatial pattern (e.g., 12 5 0.1 5), see [line style](#line-style-patterns) patterns.
+| baseline | number | `0` | xt-v0.6.0 | Reference line for fills and bars. Visualizes deviations from this value.
+| <a id="line-style-global"></a>line_style | string | `solid` | xt-v0.6.0 | Set the styling of the line. Supports predefined styles (solid, dotted, dashdot) or a custom spatial pattern (e.g., 12 5 0.1 5), see [line style](#line-style-patterns) patterns.
 | line_width | number | `5` | v0.0.1 | Set the thickness of the line.
 | line_color | string/list | `var(--accent-color)` | v0.0.1 | Set a custom color for the graph line, provide a list of colors for multiple graph entries.
 | color_thresholds | list |  | v0.2.3 | Set thresholds for dynamic graph colors, see [Line color object](#line-color-object).
@@ -202,9 +202,9 @@ We recommend looking at the [Example usage section](#example-usage) to understan
 | state_map | [state map object](#state-map-object) |  | v0.8.0 | List of entity states to convert (order matters as position becomes a value on the graph).
 | value_factor | number | 0 | v0.9.4 | Scale value by order of magnitude (e.g. convert Watts to kilo Watts), use negative value to scale down.
 | logarithmic | boolean | `false` | v0.10.0 | Use a Logarithmic scale for the graph
-| margin_x | number |  | NEXT_VERSION | Set custom X-axis margin (in pixels). Overrides the auto-calculated horizontal padding.
-| margin_y | number |  | NEXT_VERSION | Set custom Y-axis margin (in pixels). Overrides the auto-calculated vertical padding. Set to 0 to hide the minimal height offset on zero-value bars.
-| <a id="render-priority"></a>render_priority | string |  | NEXT_VERSION | Controls the [sorting order](#render-priority-of-graphs) of the graphs, `reverse` or `custom`.
+| margin_x | number |  | xt-v0.6.0 | Set custom X-axis margin (in pixels). Overrides the auto-calculated horizontal padding.
+| margin_y | number |  | xt-v0.6.0 | Set custom Y-axis margin (in pixels). Overrides the auto-calculated vertical padding. Set to 0 to hide the minimal height offset on zero-value bars.
+| <a id="render-priority"></a>render_priority | string |  | xt-v0.6.0 | Controls the [sorting order](#render-priority-of-graphs) of the graphs, `reverse` or `custom`.
 | <a id="x-scale"></a>x_scale | number | `10` | xt-v0.2.0 | Set maximum number of X-axis labels, ticks or grid lines (marks), see [X-axis labels and gridlines](#labels-ticks-and-grid-lines-for-x-axis).
 | <a id="x-major-breaks"></a>x_major_breaks | number | `4` | xt-v0.2.0 | Display major (thick) label, tick and grid line every n-th mark, see [X-axis labels and gridlines](#labels-ticks-and-grid-lines-for-x-axis).
 | <a id="x-format"></a>x_format | list |  | xt-v0.2.0 | Set time format for X-axis, see [X-axis labels and gridlines](#labels-ticks-and-grid-lines-for-x-axis).
@@ -221,15 +221,15 @@ properties of the Entity object detailed in the following table (as per `sensor.
 | attribute | string |         |  | Retrieves an attribute or [sub-attribute (attr1.attr2...)](#accessing-attributes-in-complex-structures) instead of the state
 | name | string |         |  | Set a custom display name, defaults to entity's friendly_name.
 | graph | string |         |  | Override for the graph type, `bar` or `line`.
-| animate | boolean | `false` | NEXT_VERSION | Override for the animation of `bar` or `line`.
+| animate | boolean | `false` | xt-v0.6.0 | Override for the animation of `bar` or `line`.
 | bar_spacing | number |         |  | Override for the spacing between bars in bar graph.
-| baseline | number |         | NEXT_VERSION | Override for the baseline / reference line.
-| <a id="line-style-entity"></a>line_style | string |         | NEXT_VERSION | Override for the line style, see [line style](#line-style-patterns) patterns.
+| baseline | number |         | xt-v0.6.0 | Override for the baseline / reference line.
+| <a id="line-style-entity"></a>line_style | string |         | xt-v0.6.0 | Override for the line style, see [line style](#line-style-patterns) patterns.
 | line_width | number |         |  | Override for a thickness of the line.
 | color | string |         |  | Set a custom color, overrides all other color options including thresholds.
 | unit | string |         |  | Set a custom unit of measurement, overrides `unit` set in base config (`''` value for an empty unit).
 | aggregate_func | string |         |  | Override for aggregate function used to calculate point on the graph, `avg`, `median`, `min`, `max`, `first`, `last`, `sum`.
-| <a id="priority"></a>priority | number |   `0`   | NEXT_VERSION | The [rendering priority](#render-priority-of-graphs) for this line. Only effective when card option `render_priority` is set to `custom`. Range is between `-100` and `100`. Default is `0`.
+| <a id="priority"></a>priority | number |   `0`   | xt-v0.6.0 | The [rendering priority](#render-priority-of-graphs) for this line. Only effective when card option `render_priority` is set to `custom`. Range is between `-100` and `100`. Default is `0`.
 | stack | string |         |  | Use with any group name to combine entities into a single stack.
 | show_state | boolean |         |  | Display the current state.
 | show_legend_state | boolean |  false  |  | Display the current state as part of the legend.
@@ -239,15 +239,15 @@ properties of the Entity object detailed in the following table (as per `sensor.
 | show_fill | boolean |         |  | Set to false to hide the fill.
 | show_points | boolean |         |  | Set to false to hide the points.
 | show_legend | boolean |         |  | Set to false to turn hide from the legend.
-| <a id="show-inactive">show_inactive</a> | boolean | parent | NEXT_VERSION | Overrides the global show `inactive` setting for this specific entity. Set to `true` to keep this entity visible during hover, or `false` to hide it (see [Visualizing Inactive States during Hover](#visualizing-inactive-states-during-hover)).
+| <a id="show-inactive">show_inactive</a> | boolean | parent | xt-v0.6.0 | Overrides the global show `inactive` setting for this specific entity. Set to `true` to keep this entity visible during hover, or `false` to hide it (see [Visualizing Inactive States during Hover](#visualizing-inactive-states-during-hover)).
 | state_adaptive_color | boolean |         |  | Make the color of the state adapt to the entity color.
 | y_axis | string |         |  | If 'secondary', displays using the secondary y-axis on the right.
 | fixed_value | boolean |         |  | Set to true to graph the entity's current state as a fixed value instead of graphing its state history.
 | <a id="entity-smoothing"></a>smoothing | boolean or string |         |  | Override for a flag indicating whether to make graph line smooth. Use `cubic` to describe a line by a cubic Bezier curve (see [Cubic Bézier curve](#cubic-bézier-curve)).
-| <a id="show-label"></a>show_label | boolean | `false` | NEXT_VERSION | Display a persistent floating label showing the current state of this specific entity on the graph, see [Custom Labeling](#custom-labeling).
-| <a id="align-label"></a>align_label | number | `0` (primary)<br>`100` (secondary) | NEXT_VERSION | Horizontal position of the custom label in percent (`-1` for far left, `101` for far right). Labels maintain a safe visual margin from the edges, minimum and maximum labels, see [Custom Labeling](#custom-labeling).
-| <a id="label-adaptive-color"></a>label_adaptive_color | boolean | `false` | NEXT_VERSION | When enabled, the custom label's text color dynamically changes to match the current color state of the entity, see [Custom Labeling](#custom-labeling).
-| <a id="scale-mode"></a>scale_mode | string | `clip` (static_value) | NEXT_VERSION | Controls how this entity affects the Y-axis auto-scaling boundaries. Especially useful for static thresholds, see [Scaling Modes](#scaling-modes).
+| <a id="show-label"></a>show_label | boolean | `false` | xt-v0.6.0 | Display a persistent floating label showing the current state of this specific entity on the graph, see [Custom Labeling](#custom-labeling).
+| <a id="align-label"></a>align_label | number | `0` (primary)<br>`100` (secondary) | xt-v0.6.0 | Horizontal position of the custom label in percent (`-1` for far left, `101` for far right). Labels maintain a safe visual margin from the edges, minimum and maximum labels, see [Custom Labeling](#custom-labeling).
+| <a id="label-adaptive-color"></a>label_adaptive_color | boolean | `false` | xt-v0.6.0 | When enabled, the custom label's text color dynamically changes to match the current color state of the entity, see [Custom Labeling](#custom-labeling).
+| <a id="scale-mode"></a>scale_mode | string | `clip` (static_value) | xt-v0.6.0 | Controls how this entity affects the Y-axis auto-scaling boundaries. Especially useful for static thresholds, see [Scaling Modes](#scaling-modes).
 
 ```yaml
 entities:
@@ -274,7 +274,7 @@ All properties are optional.
 | extrema | `false` | `true` / `false` |  | Display max/min information.
 | labels | `hover` | `true` / `false` / `hover` |  | Display Y-axis labels.
 | labels_secondary | `hover` | `true` / `false` / `hover` |  | Display secondary Y-axis labels.
-| <a id="inactive"></a>inactive | `false` | `true` / `false` | NEXT_VERSION | If set to `true`, all graph entities remain visible when hovering over a specific bar or line point, instead of being hidden (see [Visualizing Inactive States during Hover](#visualizing-inactive-states-during-hover)).
+| <a id="inactive"></a>inactive | `false` | `true` / `false` | xt-v0.6.0 | If set to `true`, all graph entities remain visible when hovering over a specific bar or line point, instead of being hidden (see [Visualizing Inactive States during Hover](#visualizing-inactive-states-during-hover)).
 | name_adaptive_color | `false` | `true` / `false` |  | Make the name color adapt with the primary entity color.
 | icon_adaptive_color | `false` | `true` / `false` |  | Make the icon color adapt with the primary entity color.
 | loading_indicator | `true` | `true` / `false` |  | Show loading indicator while attempting to retrieve a history.
